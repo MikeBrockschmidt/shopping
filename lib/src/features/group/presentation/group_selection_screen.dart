@@ -1,5 +1,7 @@
+// lib/src/features/group/presentation/group_selection_screen.dart
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:provider/provider.dart';
 
 import 'package:shopping/src/data/auth_repository.dart';
 import 'package:shopping/src/data/database_repository.dart';
@@ -8,6 +10,7 @@ import 'package:shopping/src/features/auth/domain/app_user.dart';
 import 'package:shopping/src/features/group/presentation/group_detail_screen.dart';
 import 'package:shopping/src/features/group/presentation/widgets/group_choice_card.dart';
 import 'package:shopping/src/features/group/presentation/widgets/group_display_card.dart';
+import 'package:shopping/src/theme/theme_provider.dart';
 
 class GroupSelectionScreen extends StatefulWidget {
   final AuthRepository authRepository;
@@ -27,11 +30,25 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = widget.authRepository.getCurrentUser();
+    final themeProvider = context.watch<ThemeProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gruppenauswahl'),
         actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            tooltip: 'Design wechseln',
+            onPressed: () {
+              themeProvider.toggleTheme(
+                themeProvider.themeMode != ThemeMode.dark,
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -88,6 +105,59 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                             ),
                           );
                         },
+                        // NEU: onDelete-Callback implementieren
+                        onDelete: () async {
+                          // Optional: Bestätigungsdialog anzeigen
+                          final bool? confirmDelete = await showDialog<bool>(
+                            context: context,
+                            builder: (BuildContext dialogContext) {
+                              return AlertDialog(
+                                title: const Text('Gruppe löschen'),
+                                content: Text(
+                                  'Bist du sicher, dass du die Gruppe "${group.name}" löschen möchtest?',
+                                ),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(false),
+                                    child: const Text('Abbrechen'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(true),
+                                    child: const Text('Löschen'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          if (confirmDelete == true) {
+                            // Überprüfen, ob der aktuelle Benutzer der Ersteller der Gruppe ist
+                            // oder ob er das Recht hat, die Gruppe zu löschen.
+                            // Hier eine einfache Logik: Nur der Ersteller kann löschen.
+                            if (currentUser?.uid == group.creatorId) {
+                              await widget.databaseRepository.deleteGroup(
+                                group.id,
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Gruppe "${group.name}" gelöscht.',
+                                  ),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Du bist nicht berechtigt, diese Gruppe zu löschen.',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        },
                       );
                     },
                   ),
@@ -137,7 +207,10 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                       groupId,
                     );
                     if (group == null) {
-                      throw Exception('Gruppe nicht gefunden');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Gruppe nicht gefunden.')),
+                      );
+                      return;
                     }
                     final firebaseUser = widget.authRepository.getCurrentUser();
 
@@ -151,9 +224,27 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                       email: firebaseUser.email ?? '',
                       photoUrl: firebaseUser.photoURL ?? '',
                     );
+                    // Überprüfen, ob der Benutzer bereits Mitglied ist
+                    if (group.members.any(
+                      (member) => member.id == appUser.id,
+                    )) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Du bist bereits Mitglied dieser Gruppe.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
                     await widget.databaseRepository.addMemberToGroup(
                       groupId,
                       appUser,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Gruppe "${group.name}" beigetreten.'),
+                      ),
                     );
                   },
                 ),

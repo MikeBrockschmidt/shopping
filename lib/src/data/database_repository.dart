@@ -1,3 +1,4 @@
+// lib/src/data/database_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shopping/src/features/group/domain/group.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
@@ -86,6 +87,34 @@ class DatabaseRepository {
         .map((snapshot) {
           return snapshot.docs.map((doc) => Group.fromMap(doc.data())).toList();
         });
+  }
+
+  // NEU: Methode zum Löschen einer Gruppe inklusive ihrer Unterkollektionen
+  Future<void> deleteGroup(String groupId) async {
+    final groupRef = _firestore.collection('groups').doc(groupId);
+
+    // 1. Alle To-Do-Einträge löschen
+    final todosSnapshot = await groupRef.collection('todos').get();
+    for (var doc in todosSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    // 2. Alle Shopping-Items löschen
+    final shoppingItemsSnapshot = await groupRef
+        .collection('shopping_items')
+        .get();
+    for (var doc in shoppingItemsSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    // 3. Alle Memories löschen
+    final memoriesSnapshot = await groupRef.collection('memories').get();
+    for (var doc in memoriesSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    // 4. Die Gruppe selbst löschen
+    await groupRef.delete();
   }
 
   Future<void> createShoppingItem(String groupId, ShoppingItem item) async {
