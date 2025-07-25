@@ -3,7 +3,7 @@ import 'package:shopping/src/features/group/domain/group.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
 import 'package:shopping/src/features/todo/domain/todo.dart';
 import 'package:shopping/src/features/auth/domain/app_user.dart';
-import 'package:shopping/src/features/memory/domain/memory_item.dart'; // NEU: Importiere dein MemoryItem-Modell
+import 'package:shopping/src/features/memory/domain/memory_item.dart';
 
 class DatabaseRepository {
   final FirebaseFirestore _firestore;
@@ -11,7 +11,6 @@ class DatabaseRepository {
   DatabaseRepository({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  // --- To-Do Methoden ---
   Future<void> createTodo(String groupId, Todo todo) async {
     await _firestore
         .collection('groups')
@@ -60,7 +59,6 @@ class DatabaseRepository {
         .update({'isDone': false});
   }
 
-  // --- Group Methoden ---
   Future<void> createGroup(Group group) async {
     await _firestore.collection('groups').doc(group.id).set(group.toMap());
   }
@@ -90,7 +88,6 @@ class DatabaseRepository {
         });
   }
 
-  // --- Shopping-Liste Methoden ---
   Future<void> createShoppingItem(String groupId, ShoppingItem item) async {
     await _firestore
         .collection('groups')
@@ -136,17 +133,12 @@ class DatabaseRepository {
         .delete();
   }
 
-  // --- NEU: Memory Methoden ---
-
   Future<List<MemoryItem>> getMemories(String groupId) async {
     final querySnapshot = await _firestore
         .collection('groups')
         .doc(groupId)
         .collection('memories')
-        .orderBy(
-          'createdAt',
-          descending: true,
-        ) // Sortieren nach Erstellungsdatum
+        .orderBy('createdAt', descending: true)
         .get();
     return querySnapshot.docs
         .map((doc) => MemoryItem.fromFirestore(doc))
@@ -158,7 +150,7 @@ class DatabaseRepository {
         .collection('groups')
         .doc(groupId)
         .collection('memories')
-        .doc(); // Erstellt eine neue ID
+        .doc();
 
     final memoryItem = MemoryItem(
       id: newDocRef.id,

@@ -1,4 +1,3 @@
-// lib/src/features/todo/presentation/todo_screen.dart
 import 'package:flutter/material.dart';
 import 'package:shopping/src/data/auth_repository.dart';
 import 'package:shopping/src/data/database_repository.dart';
@@ -45,8 +44,7 @@ class _TodoScreenState extends State<TodoScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        // Den automatischen Zurück-Pfeil entfernen
-        automaticallyImplyLeading: false, // <-- Diese Zeile hinzufügen
+        automaticallyImplyLeading: false,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             image: DecorationImage(

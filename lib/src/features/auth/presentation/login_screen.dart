@@ -1,4 +1,3 @@
-// lib/src/features/auth/presentation/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:shopping/src/data/auth_repository.dart';
 
@@ -77,11 +76,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ermitteln des aktuellen Theme-Modus
     final Brightness brightness = Theme.of(context).brightness;
     final bool isDarkMode = brightness == Brightness.dark;
 
-    // Das entsprechende Bild basierend auf dem Theme-Modus auswählen
     final String logoImage = isDarkMode
         ? 'assets/images/wedoshopping_d.png'
         : 'assets/images/wedoshopping.png';
@@ -94,12 +91,8 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Hier wird das dynamisch ausgewählte Bild hinzugefügt
-              Image.asset(
-                logoImage,
-                height: 150, // Beispielhöhe, du kannst diese anpassen
-              ),
-              const SizedBox(height: 15), // Abstand unter dem Bild
+              Image.asset(logoImage, height: 150),
+              const SizedBox(height: 15),
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(

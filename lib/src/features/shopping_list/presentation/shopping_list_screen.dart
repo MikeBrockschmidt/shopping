@@ -1,5 +1,3 @@
-// lib/src/features/shopping_list/presentation/shopping_list_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_list_provider.dart';
@@ -61,10 +59,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         ? 'assets/images/wedoshopping_sh-d.png'
         : 'assets/images/wedoshopping_sh.png';
 
-    // Bestimme die Farbe für das Plus-Zeichen basierend auf der onPrimary Farbe des Themes
-    final Color iconColor = Theme.of(
-      context,
-    ).colorScheme.onPrimary; // <-- HIER IST DIE ÄNDERUNG
+    final Color iconColor = Theme.of(context).colorScheme.onPrimary;
 
     return Scaffold(
       appBar: AppBar(
@@ -103,7 +98,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                       shoppingListProvider.addItem(_itemController.text);
                       _itemController.clear();
                     },
-                    color: iconColor, // <-- Jetzt die onPrimary Farbe verwenden
+                    color: iconColor,
                     iconSize: 30,
                   ),
                 ],
@@ -183,10 +178,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                     ),
               const SizedBox(height: 10),
               FilledButton(
-                onPressed: () {
-                  // Die Navigationslogik wurde hier entfernt.
-                  // Der Button wird jetzt keine Aktion mehr auslösen.
-                },
+                onPressed: () {},
                 child: const Text("Gekaufte Artikel anzeigen"),
               ),
               const SizedBox(height: 50),

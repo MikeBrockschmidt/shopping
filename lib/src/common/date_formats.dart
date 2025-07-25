@@ -1,4 +1,3 @@
-// lib/src/common/date_formats.dart
 import 'package:intl/intl.dart';
 
 extension DateTimeExtension on DateTime {

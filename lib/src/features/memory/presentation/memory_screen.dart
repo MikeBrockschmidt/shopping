@@ -1,9 +1,7 @@
-// lib/src/features/memory/presentation/memory_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping/src/features/memory/domain/memory_item.dart';
 import 'package:shopping/src/features/memory/presentation/memory_provider.dart';
-// import 'package:shopping/src/theme/palette.dart'; // Nur benötigt, wenn Palette.white verwendet wird
 
 class MemoryScreen extends StatefulWidget {
   final String groupId;
@@ -15,10 +13,8 @@ class MemoryScreen extends StatefulWidget {
 }
 
 class _MemoryScreenState extends State<MemoryScreen> {
-  // Liste, um den "angeklickten" Zustand (Opazität) von 8 Gläsern zu verfolgen.
   final List<double> _glassesOpacity = List.generate(8, (_) => 0.5);
 
-  // Variable für den aktuellen Trinkstand in Litern
   double _currentLiters = 0.0;
 
   void _memoryProviderListener() {
@@ -40,7 +36,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
   void initState() {
     super.initState();
     context.read<MemoryProvider>().addListener(_memoryProviderListener);
-    _calculateCurrentLiters(); // Initialen Stand berechnen
+    _calculateCurrentLiters();
   }
 
   @override
@@ -49,48 +45,33 @@ class _MemoryScreenState extends State<MemoryScreen> {
     super.dispose();
   }
 
-  // Funktion zum Neuberechnen des aktuellen Literstands
   void _calculateCurrentLiters() {
     _currentLiters =
-        _glassesOpacity
-            .where(
-              (opacity) => opacity == 1.0,
-            ) // Filtert nur die angeklickten Gläser (Opazität 1.0)
-            .length *
-        0.2; // Multipliziert die Anzahl der angeklickten Gläser mit 0.2L
+        _glassesOpacity.where((opacity) => opacity == 1.0).length * 0.2;
   }
 
-  // Funktion zum Umschalten der Opazität und Farbe eines Glases
   void _toggleGlassState(int index) {
     setState(() {
       if (index >= 0 && index < _glassesOpacity.length) {
         _glassesOpacity[index] = _glassesOpacity[index] == 0.5 ? 1.0 : 0.5;
-        _calculateCurrentLiters(); // Stand nach dem Klicken neu berechnen
+        _calculateCurrentLiters();
       }
     });
   }
 
-  // Diese Funktion ist eine private Methode der Klasse _MemoryScreenState
   Widget _buildGlassColumn(int index) {
-    // Farbe des Icons basierend auf seinem Opazitätszustand
     final Color glassColor = _glassesOpacity[index] == 1.0
-        ? Theme.of(context)
-              .colorScheme
-              .primary // Angeklickte Farbe (z.B. Blau)
-        : Colors.grey; // Nicht angeklickte Farbe (z.B. Grau)
+        ? Theme.of(context).colorScheme.primary
+        : Colors.grey;
 
     return Column(
       children: [
         IconButton(
           icon: Opacity(
-            opacity: _glassesOpacity[index], // Opazität weiterhin verwenden
-            child: Icon(
-              Icons.local_drink, // Glas-Icon
-              size: 60, // Größeres Icon
-              color: glassColor, // Farbe basierend auf Zustand!
-            ),
+            opacity: _glassesOpacity[index],
+            child: Icon(Icons.local_drink, size: 60, color: glassColor),
           ),
-          onPressed: () => _toggleGlassState(index), // Klick-Handler
+          onPressed: () => _toggleGlassState(index),
         ),
         const SizedBox(height: 4),
         Text('0,2L', style: Theme.of(context).textTheme.titleMedium),
@@ -123,17 +104,11 @@ class _MemoryScreenState extends State<MemoryScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // NEU: ExpansionTile in eine Card gewickelt
               Card(
-                // <--- NEU: Card um das ExpansionTile
-                margin: const EdgeInsets.symmetric(
-                  vertical: 8.0,
-                ), // Abstand um die Card
-                elevation: 4.0, // Leichter Schatten
+                margin: const EdgeInsets.symmetric(vertical: 8.0),
+                elevation: 4.0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    10.0,
-                  ), // Abgerundete Ecken
+                  borderRadius: BorderRadius.circular(10.0),
                 ),
                 child: ExpansionTile(
                   title: Text(
@@ -145,7 +120,6 @@ class _MemoryScreenState extends State<MemoryScreen> {
                   ),
                   children: <Widget>[
                     const SizedBox(height: 20),
-                    // ERSTE REIHE: Vier Glas-Icons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: List.generate(
@@ -154,7 +128,6 @@ class _MemoryScreenState extends State<MemoryScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // ZWEITE REIHE: Vier weitere Glas-Icons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: List.generate(
@@ -163,7 +136,6 @@ class _MemoryScreenState extends State<MemoryScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Anzeige des aktuellen Trinkstands
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 20.0),
@@ -177,14 +149,13 @@ class _MemoryScreenState extends State<MemoryScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20), // Abstand nach dem ExpansionTile Card
-              // Die Liste der Memories (bleibt in ihrer eigenen Card, wie zuvor geändert)
+              const SizedBox(height: 20),
               memoryProvider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : memoryProvider.memories
                         .where((memory) => !memory.isArchived)
                         .isEmpty
-                  ? const SizedBox.shrink() // Text "Keine Memories auf der Liste" ist weiterhin entfernt
+                  ? const SizedBox.shrink()
                   : Card(
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       elevation: 4.0,

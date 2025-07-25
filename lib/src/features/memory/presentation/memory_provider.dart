@@ -43,11 +43,8 @@ class MemoryProvider with ChangeNotifier {
       return;
     }
     try {
-      await _db.addMemory(
-        _groupId,
-        name,
-      ); // Angenommen, du hast eine addMemory-Methode
-      await fetchMemories(); // Nach dem Hinzufügen neu laden
+      await _db.addMemory(_groupId, name);
+      await fetchMemories();
     } catch (e) {
       _errorMessage = 'Fehler beim Hinzufügen des Memories: $e';
       notifyListeners();
@@ -57,12 +54,9 @@ class MemoryProvider with ChangeNotifier {
   Future<void> toggleMemoryArchived(MemoryItem memory) async {
     try {
       if (memory.isArchived) {
-        await _db.unarchiveMemory(
-          _groupId,
-          memory.id,
-        ); // Neue Methode im DB-Repo
+        await _db.unarchiveMemory(_groupId, memory.id);
       } else {
-        await _db.archiveMemory(_groupId, memory.id); // Neue Methode im DB-Repo
+        await _db.archiveMemory(_groupId, memory.id);
       }
       await fetchMemories();
     } catch (e) {
@@ -73,10 +67,7 @@ class MemoryProvider with ChangeNotifier {
 
   Future<void> removeMemory(MemoryItem memory) async {
     try {
-      await _db.removeMemory(
-        _groupId,
-        memory.id,
-      ); // Angenommen, du hast eine removeMemory-Methode
+      await _db.removeMemory(_groupId, memory.id);
       await fetchMemories();
     } catch (e) {
       _errorMessage = 'Fehler beim Entfernen des Memories: $e';

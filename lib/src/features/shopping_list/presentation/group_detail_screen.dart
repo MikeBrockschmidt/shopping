@@ -39,7 +39,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               ShoppingListProvider(widget.databaseRepository, widget.groupId),
         ),
         ChangeNotifierProvider(
-          // MemoryProvider hinzufügen
           create: (_) =>
               MemoryProvider(widget.databaseRepository, widget.groupId),
         ),
@@ -77,7 +76,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               widget.groupId,
               groupName: widget.groupName,
             ),
-            MemoryScreen(groupId: widget.groupId), // MemoryScreen einfügen
+            MemoryScreen(groupId: widget.groupId),
             ShoppingListScreen(groupId: widget.groupId),
           ],
         ),
@@ -88,7 +87,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               label: 'To-Dos',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.collections_bookmark), // Icon für Memory
+              icon: Icon(Icons.collections_bookmark),
               label: 'Memory',
             ),
             BottomNavigationBarItem(
