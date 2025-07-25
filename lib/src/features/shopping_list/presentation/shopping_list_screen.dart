@@ -1,7 +1,10 @@
+// lib/src/features/shopping_list/presentation/shopping_list_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_list_provider.dart';
 import 'package:shopping/src/features/shopping_list/presentation/collected_items_screen.dart';
+import 'package:shopping/src/theme/palette.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   final String groupId;
@@ -51,7 +54,28 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   Widget build(BuildContext context) {
     final shoppingListProvider = context.watch<ShoppingListProvider>();
 
+    final Brightness brightness = Theme.of(context).brightness;
+    final bool isDarkMode = brightness == Brightness.dark;
+
+    final String backgroundImage = isDarkMode
+        ? 'assets/images/wedoshopping_sh-d.png'
+        : 'assets/images/wedoshopping_sh.png';
+
+    // Bestimme die Farbe für das Plus-Zeichen basierend auf der onPrimary Farbe des Themes
+    final Color iconColor = Theme.of(
+      context,
+    ).colorScheme.onPrimary; // <-- HIER IST DIE ÄNDERUNG
+
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        toolbarHeight: 200,
+        elevation: 16,
+        flexibleSpace: FlexibleSpaceBar(
+          centerTitle: true,
+          background: Image.asset(backgroundImage, fit: BoxFit.cover),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -79,7 +103,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                       shoppingListProvider.addItem(_itemController.text);
                       _itemController.clear();
                     },
-                    color: Theme.of(context).primaryColor,
+                    color: iconColor, // <-- Jetzt die onPrimary Farbe verwenden
                     iconSize: 30,
                   ),
                 ],
@@ -160,14 +184,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               const SizedBox(height: 10),
               FilledButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return CollectedItems(groupId: widget.groupId);
-                      },
-                    ),
-                  );
+                  // Die Navigationslogik wurde hier entfernt.
+                  // Der Button wird jetzt keine Aktion mehr auslösen.
                 },
                 child: const Text("Gekaufte Artikel anzeigen"),
               ),

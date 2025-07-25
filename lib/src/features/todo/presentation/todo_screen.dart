@@ -1,3 +1,4 @@
+// lib/src/features/todo/presentation/todo_screen.dart
 import 'package:flutter/material.dart';
 import 'package:shopping/src/data/auth_repository.dart';
 import 'package:shopping/src/data/database_repository.dart';
@@ -6,13 +7,13 @@ import 'package:shopping/src/features/todo/presentation/add_todo_screen.dart';
 import 'package:shopping/src/features/todo/presentation/widgets/todo_card.dart';
 import 'package:shopping/src/theme/palette.dart';
 
-class HomeScreen extends StatefulWidget {
+class TodoScreen extends StatefulWidget {
   final DatabaseRepository db;
   final AuthRepository auth;
   final String groupId;
   final String groupName;
 
-  const HomeScreen(
+  const TodoScreen(
     this.db,
     this.auth,
     this.groupId, {
@@ -21,10 +22,10 @@ class HomeScreen extends StatefulWidget {
   });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<TodoScreen> createState() => _TodoScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _TodoScreenState extends State<TodoScreen> {
   Future<List<Todo>>? _myTodos;
 
   @override
@@ -39,18 +40,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final bool isDarkMode = brightness == Brightness.dark;
 
     final String backgroundImage = isDarkMode
-        ? 'assets/images/calendar_d.jpg'
-        : 'assets/images/calendar.jpg';
+        ? 'assets/images/wedoshopping_do.png'
+        : 'assets/images/wedoshopping_do-d.png';
 
     return Scaffold(
       appBar: AppBar(
+        // Den automatischen Zurück-Pfeil entfernen
+        automaticallyImplyLeading: false, // <-- Diese Zeile hinzufügen
         flexibleSpace: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
             image: DecorationImage(
               image: AssetImage(backgroundImage),
               fit: BoxFit.cover,
-              opacity: 0.5,
             ),
           ),
           child: Padding(
@@ -59,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         toolbarHeight: 200,
-        shadowColor: Theme.of(context).colorScheme.primary,
         elevation: 16,
       ),
       floatingActionButton: FloatingActionButton(

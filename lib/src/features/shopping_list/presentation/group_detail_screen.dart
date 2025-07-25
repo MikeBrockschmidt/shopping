@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping/src/data/auth_repository.dart';
 import 'package:shopping/src/data/database_repository.dart';
+import 'package:shopping/src/features/memory/presentation/memory_provider.dart';
 import 'package:shopping/src/features/todo/presentation/todo_screen.dart';
 import 'package:shopping/src/features/shopping_list/presentation/shopping_list_screen.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_list_provider.dart';
+import 'package:shopping/src/features/memory/presentation/memory_screen.dart';
 import 'package:shopping/src/theme/theme_provider.dart';
 
 class GroupDetailScreen extends StatefulWidget {
@@ -30,9 +32,18 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) =>
-          ShoppingListProvider(widget.databaseRepository, widget.groupId),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) =>
+              ShoppingListProvider(widget.databaseRepository, widget.groupId),
+        ),
+        ChangeNotifierProvider(
+          // MemoryProvider hinzufügen
+          create: (_) =>
+              MemoryProvider(widget.databaseRepository, widget.groupId),
+        ),
+      ],
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.groupName),
@@ -60,12 +71,13 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         body: IndexedStack(
           index: _selectedIndex,
           children: [
-            HomeScreen(
+            TodoScreen(
               widget.databaseRepository,
               widget.authRepository,
               widget.groupId,
               groupName: widget.groupName,
             ),
+            MemoryScreen(groupId: widget.groupId), // MemoryScreen einfügen
             ShoppingListScreen(groupId: widget.groupId),
           ],
         ),
@@ -74,6 +86,10 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.checklist),
               label: 'To-Dos',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.collections_bookmark), // Icon für Memory
+              label: 'Memory',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.shopping_cart),

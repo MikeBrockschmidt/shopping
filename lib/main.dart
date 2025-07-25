@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Shopping',
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.themeMode,
       debugShowCheckedModeBanner: false,
