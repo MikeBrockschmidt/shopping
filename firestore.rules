@@ -1,0 +1,16 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Einfache Regeln für alle Gruppenoperationen
+    match /groups/{groupId} {
+      // Alle Operationen für authentifizierte Benutzer erlauben
+      allow read, write: if request.auth != null;
+      
+      // Untersammlungen (todos, shopping_items, memories) in Gruppen
+      match /{subcollection=**} {
+        allow read, write: if request.auth != null;
+      }
+    }
+  }
+}
