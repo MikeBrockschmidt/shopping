@@ -1,5 +1,6 @@
 // lib/src/data/database_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shopping/src/features/group/domain/group.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
 import 'package:shopping/src/features/todo/domain/todo.dart';
@@ -118,12 +119,28 @@ class DatabaseRepository {
   }
 
   Future<void> createShoppingItem(String groupId, ShoppingItem item) async {
-    await _firestore
-        .collection('groups')
-        .doc(groupId)
-        .collection('shopping_items')
-        .doc(item.id)
-        .set(item.toMap());
+    try {
+      // Überprüfung, ob Firebase Auth User verfügbar ist
+      if (FirebaseAuth.instance.currentUser == null) {
+        throw Exception('User not authenticated - cannot create shopping item');
+      }
+      
+      print('DatabaseRepository: Creating shopping item for group $groupId');
+      print('Shopping item data: ${item.toMap()}');
+      print('Current user: ${FirebaseAuth.instance.currentUser?.uid}');
+      
+      await _firestore
+          .collection('groups')
+          .doc(groupId)
+          .collection('shopping_items')
+          .doc(item.id)
+          .set(item.toMap());
+      
+      print('DatabaseRepository: Successfully created shopping item ${item.id}');
+    } catch (e) {
+      print('DatabaseRepository: Error creating shopping item: $e');
+      rethrow;
+    }
   }
 
   Stream<List<ShoppingItem>> getShoppingItemsStream(String groupId) {

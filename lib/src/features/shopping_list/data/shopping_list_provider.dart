@@ -40,8 +40,15 @@ class ShoppingListProvider with ChangeNotifier {
     _setErrorMessage(null);
 
     try {
-      _items = await _databaseRepository.getShoppingItemsStream(_groupId).first;
+      print('ShoppingListProvider: Loading shopping list for group $_groupId');
+      
+      // Stream listening instead of .first to avoid permission errors
+      final stream = _databaseRepository.getShoppingItemsStream(_groupId);
+      _items = await stream.first;
+      
+      print('ShoppingListProvider: Successfully loaded ${_items.length} items');
     } catch (e) {
+      print('ShoppingListProvider: Error loading shopping list: $e');
       _setErrorMessage('Fehler beim Laden der Einkaufsliste: ${e.toString()}');
       _items = [];
     } finally {
@@ -67,9 +74,16 @@ class ShoppingListProvider with ChangeNotifier {
         groupId: _groupId,
       );
 
+      // Debugging: Ausgabe der Gruppen-ID und Artikel-Daten
+      print('Creating shopping item for group: $_groupId');
+      print('Item data: ${newItem.toMap()}');
+
       await _databaseRepository.createShoppingItem(_groupId, newItem);
       _items.add(newItem);
+      
+      print('Successfully created shopping item: ${newItem.name}');
     } catch (e) {
+      print('Error creating shopping item: $e');
       _setErrorMessage('Fehler beim Hinzufügen des Artikels: ${e.toString()}');
     } finally {
       _setLoading(false);
