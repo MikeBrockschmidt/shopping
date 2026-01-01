@@ -55,7 +55,7 @@ class Todo {
       'title': title,
       'description': description,
       'priority': priority.name,
-      'color': color.toARGB32(),
+      'color': '#${color.value.toRadixString(16).padLeft(8, '0')}',
       'isDone': isDone,
       'dueDate': dueDate,
       'icon': icon.name,
@@ -63,13 +63,29 @@ class Todo {
   }
 
   factory Todo.fromMap(Map<String, dynamic> map) {
+    Color parseColor(dynamic colorValue) {
+      if (colorValue is String) {
+        // Hex-String: '#AARRGGBB' oder '#RRGGBB'
+        final hexString = colorValue.replaceFirst('#', '');
+        if (hexString.length == 8) {
+          return Color(int.parse('0x$hexString'));
+        } else if (hexString.length == 6) {
+          return Color(int.parse('0xFF$hexString'));
+        }
+      } else if (colorValue is int) {
+        // Direkter Integer-Wert (für alte Daten)
+        return Color(colorValue);
+      }
+      return Color(0xFF0000FF); // Fallback zu Blau
+    }
+
     return Todo(
       id: map['id'],
       groupId: map['groupId'],
       title: map['title'],
       description: map['description'],
       priority: Priority.values.byName(map['priority']),
-      color: Color(map['color']),
+      color: parseColor(map['color']),
       isDone: map['isDone'],
       dueDate: (map['dueDate'] as Timestamp).toDate(),
       icon: TodoIcon.values.byName(map['icon']),

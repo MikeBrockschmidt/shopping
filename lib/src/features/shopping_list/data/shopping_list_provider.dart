@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shopping/src/data/database_repository.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
+import 'package:shopping/src/services/image_service.dart';
 import 'package:uuid/uuid.dart';
 
 class ShoppingListProvider with ChangeNotifier {
@@ -41,11 +42,11 @@ class ShoppingListProvider with ChangeNotifier {
 
     try {
       print('ShoppingListProvider: Loading shopping list for group $_groupId');
-      
+
       // Stream listening instead of .first to avoid permission errors
       final stream = _databaseRepository.getShoppingItemsStream(_groupId);
       _items = await stream.first;
-      
+
       print('ShoppingListProvider: Successfully loaded ${_items.length} items');
     } catch (e) {
       print('ShoppingListProvider: Error loading shopping list: $e');
@@ -56,7 +57,12 @@ class ShoppingListProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addItem(String name) async {
+  Future<void> addItem(
+    String name, {
+    String? iconName,
+    String? imageUrl,
+    bool hasCustomImage = false,
+  }) async {
     if (name.trim().isEmpty) {
       _setErrorMessage('Der Artikelname darf nicht leer sein.');
       return;
@@ -72,6 +78,9 @@ class ShoppingListProvider with ChangeNotifier {
         name: name.trim(),
         isBought: false,
         groupId: _groupId,
+        iconName: hasCustomImage ? null : (iconName ?? 'shopping_cart'),
+        imageUrl: hasCustomImage ? imageUrl : null,
+        hasCustomImage: hasCustomImage,
       );
 
       // Debugging: Ausgabe der Gruppen-ID und Artikel-Daten
@@ -80,8 +89,12 @@ class ShoppingListProvider with ChangeNotifier {
 
       await _databaseRepository.createShoppingItem(_groupId, newItem);
       _items.add(newItem);
-      
-      print('Successfully created shopping item: ${newItem.name}');
+
+      if (hasCustomImage && imageUrl != null) {
+        print('Successfully created shopping item: ${newItem.name} with custom image: $imageUrl');
+      } else {
+        print('Successfully created shopping item: ${newItem.name} with icon: ${iconName ?? 'shopping_cart'}');
+      }
     } catch (e) {
       print('Error creating shopping item: $e');
       _setErrorMessage('Fehler beim Hinzufügen des Artikels: ${e.toString()}');
@@ -95,6 +108,17 @@ class ShoppingListProvider with ChangeNotifier {
     _setErrorMessage(null);
 
     try {
+      // Delete custom image from Firebase Storage if it exists
+      if (item.hasCustomImage && item.imageUrl != null) {
+        try {
+          await ImageService.deleteItemImage(item.imageUrl!);
+          print('Successfully deleted custom image for item: ${item.name}');
+        } catch (e) {
+          print('Warning: Could not delete custom image for item ${item.name}: $e');
+          // Continue with item deletion even if image deletion fails
+        }
+      }
+      
       await _databaseRepository.deleteShoppingItem(_groupId, item.id);
       _items.removeWhere((i) => i.id == item.id);
     } catch (e) {
@@ -137,7 +161,19 @@ class ShoppingListProvider with ChangeNotifier {
       final List<ShoppingItem> itemsToClear = _items
           .where((item) => item.isBought)
           .toList();
+      
       for (var item in itemsToClear) {
+        // Delete custom image from Firebase Storage if it exists
+        if (item.hasCustomImage && item.imageUrl != null) {
+          try {
+            await ImageService.deleteItemImage(item.imageUrl!);
+            print('Successfully deleted custom image for collected item: ${item.name}');
+          } catch (e) {
+            print('Warning: Could not delete custom image for collected item ${item.name}: $e');
+            // Continue with item deletion even if image deletion fails
+          }
+        }
+        
         await _databaseRepository.deleteShoppingItem(_groupId, item.id);
       }
       _items.removeWhere((item) => item.isBought);

@@ -30,23 +30,55 @@ class ColorSlider extends StatefulWidget {
 enum ColorPreviewPosition { start, end }
 
 class _ColorSliderState extends State<ColorSlider> {
-  late double _hue;
+  late int _colorIndex;
   static const List<Color> _defaultColors = [
-    Color(0xFFFF0000),
-    Color(0xFFFFFF00),
-    Color(0xFF00FF00),
-    Color(0xFF00FFFF),
-    Color(0xFF0000FF),
-    Color(0xFFFF00FF),
-    Color(0xFFFF0000),
+    Color(0xFFFF0000), // Rot
+    Color(0xFFFF6B6B), // Hellrot
+    Color(0xFF8B0000), // Dunkelrot
+    Color(0xFFFF8C00), // Orange
+    Color(0xFFFFD700), // Gold
+    Color(0xFFFFFF00), // Gelb
+    Color(0xFFFFF44F), // Hellgelb
+    Color(0xFF9ACD32), // Gelbgrün
+    Color(0xFF00FF00), // Grün
+    Color(0xFF32CD32), // Limonengrün
+    Color(0xFF006400), // Dunkelgrün
+    Color(0xFF00CED1), // Türkis
+    Color(0xFF00FFFF), // Cyan
+    Color(0xFF87CEEB), // Himmelblau
+    Color(0xFF0000FF), // Blau
+    Color(0xFF4169E1), // Königsblau
+    Color(0xFF000080), // Dunkelblau
+    Color(0xFF8A2BE2), // Blauviolett
+    Color(0xFFFF00FF), // Magenta
+    Color(0xFFFF69B4), // Helles Pink
+    Color(0xFFFFB6C1), // Zartes Pink
+    Color(0xFFFFC0CB), // Helles zartes Pink
+    Color(0xFFDB7093), // Mittleres Violettrot
+    Color(0xFFC71585), // Dunkles Violettrot
+    Color(0xFFFF1493), // Tiefes Pink
+    Color(0xFFDA70D6), // Zartes Orchidee
+    Color(0xFFEE82EE), // Veilchen
+    Color(0xFFDDA0DD), // Pflaume
+    Color(0xFFD8BFD8), // Distel
+    Color(0xFFE6D8F0), // Zartes Lila-Pink
+    Color(0xFFF0E6F0), // Sehr zartes Lila
+    Color(0xFF800080), // Lila
+    Color(0xFF4B0082), // Indigo
+    Color(0xFFA52A2A), // Braun
+    Color(0xFFD2B48C), // Tan
+    Color(0xFF808080), // Grau
+    Color(0xFFC0C0C0), // Silber
   ];
 
   @override
   void initState() {
     super.initState();
-    _hue = widget.initialColor != null
-        ? HSVColor.fromColor(widget.initialColor!).hue
-        : 0.0;
+    if (widget.initialColor != null) {
+      _colorIndex = _findClosestColorIndex(widget.initialColor!);
+    } else {
+      _colorIndex = 0;
+    }
   }
 
   @override
@@ -54,19 +86,44 @@ class _ColorSliderState extends State<ColorSlider> {
     super.didUpdateWidget(oldWidget);
     if (widget.initialColor != oldWidget.initialColor &&
         widget.initialColor != null) {
-      _hue = HSVColor.fromColor(widget.initialColor!).hue;
+      _colorIndex = _findClosestColorIndex(widget.initialColor!);
     }
   }
 
-  void _updateHue(double value) {
-    setState(() {
-      _hue = value;
-    });
-    final selectedColor = HSVColor.fromAHSV(1, _hue, 1, 1).toColor();
-    widget.onColorSelected(selectedColor);
+  int _findClosestColorIndex(Color color) {
+    int closestIndex = 0;
+    double minDistance = double.infinity;
+    
+    for (int i = 0; i < _defaultColors.length; i++) {
+      final distance = _colorDistance(color, _defaultColors[i]);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = i;
+      }
+    }
+    
+    return closestIndex;
   }
 
-  Color get _selectedColor => HSVColor.fromAHSV(1, _hue, 1, 1).toColor();
+  double _colorDistance(Color c1, Color c2) {
+    final r = (c1.red - c2.red).toDouble();
+    final g = (c1.green - c2.green).toDouble();
+    final b = (c1.blue - c2.blue).toDouble();
+    final a = (c1.alpha - c2.alpha).toDouble();
+    return (r * r + g * g + b * b + a * a).toDouble();
+  }
+
+  void _updateColor(double value) {
+    final newIndex = value.round();
+    if (newIndex != _colorIndex) {
+      setState(() {
+        _colorIndex = newIndex;
+      });
+      widget.onColorSelected(_defaultColors[_colorIndex]);
+    }
+  }
+
+  Color get _selectedColor => _defaultColors[_colorIndex];
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +165,7 @@ class _ColorSliderState extends State<ColorSlider> {
                 widget.shape ??
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             gradient: LinearGradient(
-              colors: widget.gradientColors ?? _defaultColors,
+              colors: _defaultColors,
             ),
           ),
         ),
@@ -132,7 +189,13 @@ class _ColorSliderState extends State<ColorSlider> {
               elevation: 0,
             ),
           ),
-          child: Slider(value: _hue, min: 0, max: 360, onChanged: _updateHue),
+          child: Slider(
+            value: _colorIndex.toDouble(),
+            min: 0,
+            max: (_defaultColors.length - 1).toDouble(),
+            divisions: _defaultColors.length - 1,
+            onChanged: _updateColor,
+          ),
         ),
       ],
     );

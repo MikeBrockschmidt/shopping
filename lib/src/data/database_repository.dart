@@ -43,6 +43,64 @@ class DatabaseRepository {
     return querySnapshot.docs.map((doc) => Todo.fromMap(doc.data())).toList();
   }
 
+  Future<List<String>> getSuggestedTitles(String groupId, String input) async {
+    if (input.isEmpty) return [];
+    
+    final todos = await getTodos(groupId);
+    final suggestions = <String>{};
+    
+    final inputLower = input.toLowerCase();
+    
+    // Finde ähnliche Todo-Titel
+    for (final todo in todos) {
+      final titleLower = todo.title.toLowerCase();
+      // Prüfe, ob der Todo-Titel den Input enthält oder umgekehrt
+      if (titleLower.contains(inputLower) || inputLower.contains(titleLower.replaceAll(inputLower, ''))) {
+        suggestions.add(todo.title);
+      }
+      // Auch Fuzzy-Matching: ähnliche Buchstaben
+      if (_calculateSimilarity(inputLower, titleLower) > 0.6) {
+        suggestions.add(todo.title);
+      }
+    }
+    
+    return suggestions.toList();
+  }
+
+  // Berechnet die Ähnlichkeit zwischen zwei Strings (0-1, wobei 1 = identisch)
+  double _calculateSimilarity(String s1, String s2) {
+    final longer = s1.length > s2.length ? s1 : s2;
+    final shorter = s1.length > s2.length ? s2 : s1;
+    
+    if (longer.isEmpty) return 1.0;
+    
+    final editDistance = _levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  }
+
+  // Berechnet die Levenshtein-Distanz zwischen zwei Strings
+  int _levenshteinDistance(String s1, String s2) {
+    final costs = <int>[];
+    for (int i = 0; i <= s1.length; i++) {
+      var lastValue = i;
+      for (int j = 0; j <= s2.length; j++) {
+        if (i == 0) {
+          costs.add(j);
+        } else if (j > 0) {
+          var newValue = costs[j - 1];
+          if (s1[i - 1] != s2[j - 1]) {
+            newValue = (newValue < lastValue ? newValue : lastValue) + 1;
+            newValue = newValue < costs[j] ? newValue : costs[j] + 1;
+          }
+          costs[j - 1] = lastValue;
+          lastValue = newValue;
+        }
+      }
+      if (i > 0) costs[s2.length] = lastValue;
+    }
+    return costs.isEmpty ? s2.length : costs[s2.length];
+  }
+
   Future<void> checkTodo(String groupId, String todoId) async {
     await _firestore
         .collection('groups')
@@ -59,6 +117,15 @@ class DatabaseRepository {
         .collection('todos')
         .doc(todoId)
         .update({'isDone': false});
+  }
+
+  Future<void> deleteTodo(String groupId, String todoId) async {
+    await _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('todos')
+        .doc(todoId)
+        .delete();
   }
 
   Future<void> createGroup(Group group) async {
@@ -124,19 +191,21 @@ class DatabaseRepository {
       if (FirebaseAuth.instance.currentUser == null) {
         throw Exception('User not authenticated - cannot create shopping item');
       }
-      
+
       print('DatabaseRepository: Creating shopping item for group $groupId');
       print('Shopping item data: ${item.toMap()}');
       print('Current user: ${FirebaseAuth.instance.currentUser?.uid}');
-      
+
       await _firestore
           .collection('groups')
           .doc(groupId)
           .collection('shopping_items')
           .doc(item.id)
           .set(item.toMap());
-      
-      print('DatabaseRepository: Successfully created shopping item ${item.id}');
+
+      print(
+        'DatabaseRepository: Successfully created shopping item ${item.id}',
+      );
     } catch (e) {
       print('DatabaseRepository: Error creating shopping item: $e');
       rethrow;

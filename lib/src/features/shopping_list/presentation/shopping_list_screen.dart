@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_list_provider.dart';
+import 'package:shopping/src/features/shopping_list/data/shopping_icons.dart';
 import 'package:shopping/src/features/shopping_list/presentation/collected_items_screen.dart';
-import 'package:shopping/src/theme/palette.dart';
+import 'package:shopping/src/features/shopping_list/presentation/widgets/add_item_dialog.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   final String groupId;
@@ -59,8 +60,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         ? 'assets/images/wedoshopping_sh-d.png'
         : 'assets/images/wedoshopping_sh.png';
 
-    final Color iconColor = Theme.of(context).colorScheme.onPrimary;
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -76,32 +75,46 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _itemController,
-                      decoration: const InputDecoration(
-                        hintText: 'Neuen Artikel hinzufügen',
-                        border: OutlineInputBorder(),
+              // Add Item Button
+              Card(
+                child: InkWell(
+                  onTap: () async {
+                    await showDialog(
+                      context: context,
+                      builder: (context) => AddItemDialog(
+                        groupId: widget.groupId,
+                        onAddItem: (name, iconName, imageUrl, hasCustomImage) {
+                          shoppingListProvider.addItem(
+                            name,
+                            iconName: iconName,
+                            imageUrl: imageUrl,
+                            hasCustomImage: hasCustomImage,
+                          );
+                        },
                       ),
-                      onSubmitted: (value) {
-                        shoppingListProvider.addItem(value);
-                        _itemController.clear();
-                      },
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline,
+                          color: Theme.of(context).primaryColor,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Neuen Artikel hinzufügen',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      shoppingListProvider.addItem(_itemController.text);
-                      _itemController.clear();
-                    },
-                    color: iconColor,
-                    iconSize: 30,
-                  ),
-                ],
+                ),
               ),
               const SizedBox(height: 20),
               shoppingListProvider.isLoading
@@ -131,9 +144,63 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(12.0),
                             child: Row(
                               children: [
+                                // Thumbnail Icon oder Image
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: item.hasCustomImage && item.imageUrl != null
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.network(
+                                            item.imageUrl!,
+                                            fit: BoxFit.cover,
+                                            width: 40,
+                                            height: 40,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Padding(
+                                                padding: const EdgeInsets.all(8),
+                                                child: Icon(
+                                                  Icons.image_not_supported,
+                                                  color: Theme.of(context).primaryColor,
+                                                  size: 24,
+                                                ),
+                                              );
+                                            },
+                                            loadingBuilder: (context, child, loadingProgress) {
+                                              if (loadingProgress == null) return child;
+                                              return Center(
+                                                child: SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    value: loadingProgress.expectedTotalBytes != null
+                                                        ? loadingProgress.cumulativeBytesLoaded / 
+                                                          loadingProgress.expectedTotalBytes!
+                                                        : null,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : Padding(
+                                          padding: const EdgeInsets.all(8),
+                                          child: Icon(
+                                            ShoppingIcons.getIcon(item.iconName ?? 'shopping_cart'),
+                                            color: Theme.of(context).primaryColor,
+                                            size: 24,
+                                          ),
+                                        ),
+                                ),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     item.name,
@@ -142,6 +209,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                           ? TextDecoration.lineThrough
                                           : null,
                                       fontSize: 18,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ),
@@ -178,7 +246,26 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                     ),
               const SizedBox(height: 10),
               FilledButton(
-                onPressed: () {},
+                onPressed: () {
+                  final collectedItems = shoppingListProvider.items
+                      .where((item) => item.isBought)
+                      .toList();
+                  
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CollectedItems(
+                        collectedItems: collectedItems,
+                        onToggleItem: (item) {
+                          shoppingListProvider.toggleItemBought(item);
+                        },
+                        onRemoveItem: (item) {
+                          shoppingListProvider.removeItem(item);
+                        },
+                      ),
+                    ),
+                  );
+                },
                 child: const Text("Gekaufte Artikel anzeigen"),
               ),
               const SizedBox(height: 50),

@@ -89,6 +89,8 @@ class _TodoScreenState extends State<TodoScreen> {
                 return Text("Fehler: ${snapshot.error}");
               } else if (snapshot.hasData) {
                 List<Todo> myTodos = snapshot.data ?? [];
+                // Nur nicht-erledigte Todos anzeigen
+                myTodos = myTodos.where((todo) => !todo.isDone).toList();
                 return ListView.builder(
                   itemCount: myTodos.length,
                   itemBuilder: (context, index) {
@@ -114,6 +116,14 @@ class _TodoScreenState extends State<TodoScreen> {
                         color: todo.color,
                         priority: todo.priority,
                         isDone: todo.isDone,
+                        onDelete: () async {
+                          await widget.db.deleteTodo(widget.groupId, todo.id);
+                          if (mounted) {
+                            setState(() {
+                              _myTodos = widget.db.getTodos(widget.groupId);
+                            });
+                          }
+                        },
                       ),
                       confirmDismiss: (direction) async {
                         if (direction == DismissDirection.startToEnd) {

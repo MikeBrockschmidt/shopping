@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shopping/src/features/shopping_list/data/shopping_list_provider.dart';
+import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
+import 'package:shopping/src/features/shopping_list/data/shopping_icons.dart';
 
 class CollectedItems extends StatelessWidget {
-  final String groupId;
+  final List<ShoppingItem> collectedItems;
+  final Function(ShoppingItem) onToggleItem;
+  final Function(ShoppingItem) onRemoveItem;
 
-  const CollectedItems({super.key, required this.groupId});
+  const CollectedItems({
+    super.key,
+    required this.collectedItems,
+    required this.onToggleItem,
+    required this.onRemoveItem,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final shoppingListProvider = context.watch<ShoppingListProvider>();
-
     return Scaffold(
       appBar: AppBar(title: const Text('Gekaufte Artikel')),
       body: SingleChildScrollView(
@@ -18,11 +23,7 @@ class CollectedItems extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              shoppingListProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : shoppingListProvider.items
-                        .where((item) => item.isBought == true)
-                        .isEmpty
+              collectedItems.isEmpty
                   ? const Center(
                       child: SizedBox(
                         height: 200,
@@ -32,19 +33,53 @@ class CollectedItems extends StatelessWidget {
                   : ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: shoppingListProvider.items
-                          .where((item) => item.isBought == true)
-                          .length,
+                      itemCount: collectedItems.length,
                       itemBuilder: (context, index) {
-                        final item = shoppingListProvider.items
-                            .where((item) => item.isBought == true)
-                            .toList()[index];
+                        final item = collectedItems[index];
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 8),
                           child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(12.0),
                             child: Row(
                               children: [
+                                // Thumbnail Icon oder Image
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: item.hasCustomImage && item.imageUrl != null
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.network(
+                                            item.imageUrl!,
+                                            fit: BoxFit.cover,
+                                            width: 40,
+                                            height: 40,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Padding(
+                                                padding: const EdgeInsets.all(8),
+                                                child: Icon(
+                                                  Icons.image_not_supported,
+                                                  color: Colors.green,
+                                                  size: 24,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : Padding(
+                                          padding: const EdgeInsets.all(8),
+                                          child: Icon(
+                                            ShoppingIcons.getIcon(item.iconName ?? 'shopping_cart'),
+                                            color: Colors.green,
+                                            size: 24,
+                                          ),
+                                        ),
+                                ),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     item.name,
@@ -53,6 +88,8 @@ class CollectedItems extends StatelessWidget {
                                           ? TextDecoration.lineThrough
                                           : null,
                                       fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.green.shade700,
                                     ),
                                   ),
                                 ),
@@ -69,9 +106,7 @@ class CollectedItems extends StatelessWidget {
                                         size: 28,
                                       ),
                                       onPressed: () {
-                                        shoppingListProvider.toggleItemBought(
-                                          item,
-                                        );
+                                        onToggleItem(item);
                                       },
                                     ),
                                     IconButton(
@@ -80,7 +115,7 @@ class CollectedItems extends StatelessWidget {
                                         color: Colors.redAccent,
                                       ),
                                       onPressed: () {
-                                        shoppingListProvider.removeItem(item);
+                                        onRemoveItem(item);
                                       },
                                     ),
                                   ],

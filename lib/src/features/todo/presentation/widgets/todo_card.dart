@@ -9,6 +9,7 @@ class TodoCard extends StatelessWidget {
   final Color color;
   final Priority priority;
   final bool isDone;
+  final VoidCallback? onDelete;
 
   const TodoCard({
     super.key,
@@ -18,6 +19,7 @@ class TodoCard extends StatelessWidget {
     required this.color,
     required this.priority,
     required this.isDone,
+    this.onDelete,
   });
 
   @override
@@ -71,6 +73,12 @@ class TodoCard extends StatelessWidget {
                 getPriorityEmoji(priority),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
+              if (onDelete != null)
+                IconButton(
+                  icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
+                  onPressed: onDelete,
+                  visualDensity: VisualDensity.compact,
+                ),
             ],
           ),
         ),

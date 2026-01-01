@@ -30,6 +30,41 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   bool _isLoading = false;
   TodoIcon _selectedIcon = TodoIcon.values.first;
   DateTime _selectedDate = DateTime.now().add(Duration(days: 1));
+  List<String> _suggestions = [];
+  late FocusNode _titleFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleFocusNode = FocusNode();
+    _titleController.addListener(_updateSuggestions);
+    _titleFocusNode.addListener(() {
+      if (!_titleFocusNode.hasFocus) {
+        setState(() {
+          _suggestions = [];
+        });
+      }
+    });
+  }
+
+  void _updateSuggestions() async {
+    if (!mounted) return;
+    final suggestions = await widget.db.getSuggestedTitles(widget.groupId, _titleController.text);
+    if (mounted) {
+      setState(() {
+        _suggestions = suggestions;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.removeListener(_updateSuggestions);
+    _titleFocusNode.dispose();
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,14 +83,51 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                 children: [
                   TextFormField(
                     controller: _titleController,
+                    focusNode: _titleFocusNode,
                     decoration: InputDecoration(
                       labelText: "Titel",
                       hintText: "Titel eingeben",
                     ),
                   ),
+                  if (_suggestions.isNotEmpty)
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Theme.of(context).colorScheme.outline),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: _suggestions.map((suggestion) {
+                          return Material(
+                            child: InkWell(
+                              onTap: () {
+                                _titleController.text = suggestion;
+                                setState(() {
+                                  _suggestions = [];
+                                });
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.history, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                    const SizedBox(width: 8),
+                                    Expanded(child: Text(suggestion)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   TextFormField(
                     controller: _descriptionController,
                     maxLines: 5,
+                    onTap: () {
+                      setState(() {
+                        _suggestions = [];
+                      });
+                    },
                     decoration: InputDecoration(
                       labelText: "Beschreibung",
                       hintText: "Beschreibung eingeben",
@@ -125,11 +197,26 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                               setState(() {
                                 _isLoading = true;
                               });
-                              await widget.db.createTodo(todo.groupId, todo);
-                              widget.onTodoAdded();
-
-                              if (context.mounted) {
-                                Navigator.pop(context);
+                              
+                              try {
+                                await widget.db.createTodo(todo.groupId, todo);
+                                
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  widget.onTodoAdded();
+                                }
+                              } catch (e) {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Fehler beim Erstellen: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               }
                             },
                       child: Text("Todo erstellen"),
@@ -142,12 +229,5 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
   }
 }
