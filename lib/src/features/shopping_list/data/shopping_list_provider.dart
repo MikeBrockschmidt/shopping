@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shopping/src/data/database_repository.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
 import 'package:shopping/src/services/image_service.dart';
@@ -62,6 +63,7 @@ class ShoppingListProvider with ChangeNotifier {
     String? iconName,
     String? imageUrl,
     bool hasCustomImage = false,
+    double? price,
   }) async {
     if (name.trim().isEmpty) {
       _setErrorMessage('Der Artikelname darf nicht leer sein.');
@@ -81,6 +83,7 @@ class ShoppingListProvider with ChangeNotifier {
         iconName: hasCustomImage ? null : (iconName ?? 'shopping_cart'),
         imageUrl: hasCustomImage ? imageUrl : null,
         hasCustomImage: hasCustomImage,
+        price: price,
       );
 
       // Debugging: Ausgabe der Gruppen-ID und Artikel-Daten
@@ -148,6 +151,36 @@ class ShoppingListProvider with ChangeNotifier {
       _setErrorMessage(
         'Fehler beim Aktualisieren des Artikels: ${e.toString()}',
       );
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> updateItem(ShoppingItem updatedItem) async {
+    _setLoading(true);
+    _setErrorMessage(null);
+
+    try {
+      // Update local state immediately
+      final index = _items.indexWhere((i) => i.id == updatedItem.id);
+      if (index != -1) {
+        _items[index] = updatedItem;
+        notifyListeners();
+      }
+
+      // Update in Firestore using the existing collection reference
+      await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(_groupId)
+          .collection('shopping_items')
+          .doc(updatedItem.id)
+          .update({
+            'price': updatedItem.price,
+            'imageUrl': updatedItem.imageUrl,
+            'hasCustomImage': updatedItem.hasCustomImage,
+          });
+    } catch (e) {
+      _setErrorMessage('Fehler beim Aktualisieren des Artikels: ${e.toString()}');
     } finally {
       _setLoading(false);
     }

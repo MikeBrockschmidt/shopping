@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
 import 'package:shopping/src/services/image_service.dart';
 
 // Asset logos
@@ -17,31 +18,39 @@ const List<String> _assetLogos = [
   'assets/logos/expert-benning.jpg',
 ];
 
-class AddItemDialog extends StatefulWidget {
-  final Function(String name, String? iconName, String? imageUrl, bool hasCustomImage, double? price)
-      onAddItem;
+class EditItemDialog extends StatefulWidget {
+  final ShoppingItem item;
+  final Function(ShoppingItem updatedItem) onSaveItem;
   final String groupId;
 
-  const AddItemDialog({
+  const EditItemDialog({
     super.key,
-    required this.onAddItem,
+    required this.item,
+    required this.onSaveItem,
     required this.groupId,
   });
 
   @override
-  State<AddItemDialog> createState() => _AddItemDialogState();
+  State<EditItemDialog> createState() => _EditItemDialogState();
 }
 
-class _AddItemDialogState extends State<AddItemDialog> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  String? selectedIcon = 'shopping_cart';
-  String? selectedImageUrl;
-  bool hasCustomImage = false;
+class _EditItemDialogState extends State<EditItemDialog> {
+  late TextEditingController _priceController;
+  late String? selectedImageUrl;
+  late bool hasCustomImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _priceController = TextEditingController(
+      text: widget.item.price != null ? widget.item.price.toString() : '',
+    );
+    selectedImageUrl = widget.item.imageUrl;
+    hasCustomImage = widget.item.hasCustomImage;
+  }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _priceController.dispose();
     super.dispose();
   }
@@ -64,14 +73,13 @@ class _AddItemDialogState extends State<AddItemDialog> {
       if (!mounted) return;
       setState(() {
         selectedImageUrl = url;
-        selectedIcon = null;
         hasCustomImage = true;
       });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Fehler beim Auswählen/Hochladen: \$e'),
+          content: Text('Fehler beim Auswählen/Hochladen: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -81,7 +89,6 @@ class _AddItemDialogState extends State<AddItemDialog> {
   void _selectAssetLogo(String assetPath) {
     setState(() {
       selectedImageUrl = assetPath;
-      selectedIcon = null;
       hasCustomImage = true;
     });
   }
@@ -122,16 +129,21 @@ class _AddItemDialogState extends State<AddItemDialog> {
     }
   }
 
-  void _addItem() {
-    final name = _nameController.text.trim();
-    if (name.isNotEmpty) {
-      double? price;
-      if (_priceController.text.trim().isNotEmpty) {
-        price = double.tryParse(_priceController.text.trim());
-      }
-      widget.onAddItem(name, selectedIcon, selectedImageUrl, hasCustomImage, price);
-      Navigator.of(context).pop();
+  void _saveItem() {
+    double? price;
+    if (_priceController.text.trim().isNotEmpty) {
+      price = double.tryParse(_priceController.text.trim());
     }
+
+    final updatedItem = widget.item.copyWith(
+      price: price,
+      imageUrl: selectedImageUrl,
+      hasCustomImage: hasCustomImage,
+      isBought: false, // Artikel wird wieder in die "zu kaufen"-Liste verschoben
+    );
+
+    widget.onSaveItem(updatedItem);
+    Navigator.of(context).pop();
   }
 
   @override
@@ -145,22 +157,10 @@ class _AddItemDialogState extends State<AddItemDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Neuen Artikel hinzufügen',
+                'Artikel bearbeiten',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 24),
-              // Artikel Name
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Artikelname',
-                  border: OutlineInputBorder(),
-                  hintText: 'z.B. Milch, Brot, Äpfel...',
-                ),
-                onSubmitted: (_) => _addItem(),
-                autofocus: true,
-              ),
-              const SizedBox(height: 16),
 
               // Preis
               TextField(
@@ -176,7 +176,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
               ),
               const SizedBox(height: 20),
 
-              // Nur Bild auswählen
+              // Bild auswählen
               InkWell(
                 onTap: _selectImageOnly,
                 borderRadius: BorderRadius.circular(8),
@@ -208,7 +208,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Bild auswählen',
+                              'Bild ändern',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             Text(
@@ -293,8 +293,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: _addItem,
-                    child: const Text('Hinzufügen'),
+                    onPressed: _saveItem,
+                    child: const Text('Speichern'),
                   ),
                 ],
               ),

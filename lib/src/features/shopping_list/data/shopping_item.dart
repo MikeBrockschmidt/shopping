@@ -10,6 +10,7 @@ class ShoppingItem {
   final String? iconName; // Icon name für Material Icons (nullable wenn custom image verwendet wird)
   final String? imageUrl; // URL für custom Bilder aus Firebase Storage
   final bool hasCustomImage; // Flag ob custom Image verwendet wird
+  final double? price; // Preis optional
 
   const ShoppingItem({
     required this.id,
@@ -19,6 +20,7 @@ class ShoppingItem {
     this.iconName, // Kann null sein bei custom images
     this.imageUrl,
     this.hasCustomImage = false,
+    this.price,
   });
 
   ShoppingItem copyWith({
@@ -29,6 +31,7 @@ class ShoppingItem {
     Object? iconName = _sentinel, // Use sentinel to detect if iconName was explicitly passed
     Object? imageUrl = _sentinel,
     bool? hasCustomImage,
+    Object? price = _sentinel,
   }) {
     return ShoppingItem(
       id: id ?? this.id,
@@ -38,6 +41,7 @@ class ShoppingItem {
       iconName: iconName == _sentinel ? this.iconName : iconName as String?,
       imageUrl: imageUrl == _sentinel ? this.imageUrl : imageUrl as String?,
       hasCustomImage: hasCustomImage ?? this.hasCustomImage,
+      price: price == _sentinel ? this.price : price as double?,
     );
   }
 
@@ -52,6 +56,7 @@ class ShoppingItem {
       'iconName': iconName,
       'imageUrl': imageUrl,
       'hasCustomImage': hasCustomImage,
+      'price': price,
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
@@ -66,12 +71,13 @@ class ShoppingItem {
       iconName: hasCustomImage ? map['iconName'] as String? : (map['iconName'] as String? ?? 'shopping_cart'),
       imageUrl: map['imageUrl'] as String?,
       hasCustomImage: hasCustomImage,
+      price: (map['price'] as num?)?.toDouble(),
     );
   }
 
   @override
   String toString() {
-    return 'ShoppingItem(id: $id, name: $name, isBought: $isBought, groupId: $groupId, iconName: $iconName, imageUrl: $imageUrl, hasCustomImage: $hasCustomImage)';
+    return 'ShoppingItem(id: $id, name: $name, isBought: $isBought, groupId: $groupId, iconName: $iconName, imageUrl: $imageUrl, hasCustomImage: $hasCustomImage, price: $price)';
   }
 
   @override
@@ -85,11 +91,12 @@ class ShoppingItem {
         other.groupId == groupId &&
         other.iconName == iconName &&
         other.imageUrl == imageUrl &&
-        other.hasCustomImage == hasCustomImage;
+        other.hasCustomImage == hasCustomImage &&
+        other.price == price;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ name.hashCode ^ isBought.hashCode ^ groupId.hashCode ^ iconName.hashCode ^ imageUrl.hashCode ^ hasCustomImage.hashCode;
+    return id.hashCode ^ name.hashCode ^ isBought.hashCode ^ groupId.hashCode ^ iconName.hashCode ^ imageUrl.hashCode ^ hasCustomImage.hashCode ^ price.hashCode;
   }
 }

@@ -83,12 +83,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                       context: context,
                       builder: (context) => AddItemDialog(
                         groupId: widget.groupId,
-                        onAddItem: (name, iconName, imageUrl, hasCustomImage) {
+                        onAddItem: (name, iconName, imageUrl, hasCustomImage, price) {
                           shoppingListProvider.addItem(
                             name,
                             iconName: iconName,
                             imageUrl: imageUrl,
                             hasCustomImage: hasCustomImage,
+                            price: price,
                           );
                         },
                       ),
@@ -144,13 +145,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(12.0),
+                            padding: const EdgeInsets.all(6.0),
                             child: Row(
                               children: [
                                 // Thumbnail Icon oder Image
                                 Container(
-                                  width: 40,
-                                  height: 40,
+                                  width: 49,
+                                  height: 49,
                                   decoration: BoxDecoration(
                                     color: Theme.of(context).primaryColor.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(8),
@@ -158,38 +159,55 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                   child: item.hasCustomImage && item.imageUrl != null
                                       ? ClipRRect(
                                           borderRadius: BorderRadius.circular(8),
-                                          child: Image.network(
-                                            item.imageUrl!,
-                                            fit: BoxFit.cover,
-                                            width: 40,
-                                            height: 40,
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return Padding(
-                                                padding: const EdgeInsets.all(8),
-                                                child: Icon(
-                                                  Icons.image_not_supported,
-                                                  color: Theme.of(context).primaryColor,
-                                                  size: 24,
+                                          child: item.imageUrl!.startsWith('assets/')
+                                              ? Image.asset(
+                                                  item.imageUrl!,
+                                                  fit: BoxFit.cover,
+                                                  width: 49,
+                                                  height: 49,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return Padding(
+                                                      padding: const EdgeInsets.all(8),
+                                                      child: Icon(
+                                                        Icons.image_not_supported,
+                                                        color: Theme.of(context).primaryColor,
+                                                        size: 24,
+                                                      ),
+                                                    );
+                                                  },
+                                                )
+                                              : Image.network(
+                                                  item.imageUrl!,
+                                                  fit: BoxFit.cover,
+                                                  width: 49,
+                                                  height: 49,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return Padding(
+                                                      padding: const EdgeInsets.all(8),
+                                                      child: Icon(
+                                                        Icons.image_not_supported,
+                                                        color: Theme.of(context).primaryColor,
+                                                        size: 24,
+                                                      ),
+                                                    );
+                                                  },
+                                                  loadingBuilder: (context, child, loadingProgress) {
+                                                    if (loadingProgress == null) return child;
+                                                    return Center(
+                                                      child: SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child: CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          value: loadingProgress.expectedTotalBytes != null
+                                                              ? loadingProgress.cumulativeBytesLoaded / 
+                                                                loadingProgress.expectedTotalBytes!
+                                                              : null,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
-                                              );
-                                            },
-                                            loadingBuilder: (context, child, loadingProgress) {
-                                              if (loadingProgress == null) return child;
-                                              return Center(
-                                                child: SizedBox(
-                                                  width: 16,
-                                                  height: 16,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    value: loadingProgress.expectedTotalBytes != null
-                                                        ? loadingProgress.cumulativeBytesLoaded / 
-                                                          loadingProgress.expectedTotalBytes!
-                                                        : null,
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
                                         )
                                       : Padding(
                                           padding: const EdgeInsets.all(8),
@@ -202,15 +220,31 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Text(
-                                    item.name,
-                                    style: TextStyle(
-                                      decoration: item.isBought
-                                          ? TextDecoration.lineThrough
-                                          : null,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.name,
+                                        style: TextStyle(
+                                          decoration: item.isBought
+                                              ? TextDecoration.lineThrough
+                                              : null,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      if (item.price != null)
+                                        Text(
+                                          '€ ${item.price!.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            decoration: item.isBought
+                                                ? TextDecoration.lineThrough
+                                                : null,
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                                 Row(
@@ -256,11 +290,12 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                     MaterialPageRoute(
                       builder: (context) => CollectedItems(
                         collectedItems: collectedItems,
-                        onToggleItem: (item) {
-                          shoppingListProvider.toggleItemBought(item);
-                        },
+                        groupId: widget.groupId,
                         onRemoveItem: (item) {
                           shoppingListProvider.removeItem(item);
+                        },
+                        onUpdateItem: (updatedItem) {
+                          shoppingListProvider.updateItem(updatedItem);
                         },
                       ),
                     ),
