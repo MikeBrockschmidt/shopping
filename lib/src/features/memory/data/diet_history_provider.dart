@@ -24,6 +24,8 @@ class DietHistoryProvider extends ChangeNotifier {
 
       final targetDate = date ?? DateTime.now();
       final dateKey = '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}';
+      
+      print('DEBUG DietHistoryProvider: dateKey=$dateKey, status=$status');
 
       final dietHistory = DietHistory(
         id: const Uuid().v4(),
@@ -38,6 +40,7 @@ class DietHistoryProvider extends ChangeNotifier {
       print('DEBUG DietHistoryProvider: Creating map with status=$status');
       final map = dietHistory.toMap();
       print('DEBUG DietHistoryProvider: Map=$map');
+      print('DEBUG DietHistoryProvider: Saving to groups/$groupId/memory/$dateKey');
 
       await _firestore
           .collection('groups')
@@ -45,6 +48,8 @@ class DietHistoryProvider extends ChangeNotifier {
           .collection('memory')
           .doc(dateKey)
           .set(map, SetOptions(merge: true));
+      
+      print('DEBUG DietHistoryProvider: Successfully saved diet status');
 
       _isLoading = false;
       notifyListeners();
