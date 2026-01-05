@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shopping/src/services/image_service.dart';
+import 'package:memory/src/services/image_service.dart';
 
 // Asset logos
 const List<String> _assetLogos = [

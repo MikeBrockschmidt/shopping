@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shopping/src/data/auth_repository.dart';
-import 'package:shopping/src/data/database_repository.dart';
-import 'package:shopping/src/features/memory/presentation/memory_provider.dart';
-import 'package:shopping/src/features/memory/data/diet_history_provider.dart';
-import 'package:shopping/src/features/todo/presentation/todo_screen.dart';
-import 'package:shopping/src/features/shopping_list/presentation/shopping_list_screen.dart';
-import 'package:shopping/src/features/shopping_list/data/shopping_list_provider.dart';
-import 'package:shopping/src/features/memory/presentation/memory_screen.dart';
-import 'package:shopping/src/theme/theme_provider.dart';
+import 'package:memory/src/data/auth_repository.dart';
+import 'package:memory/src/data/database_repository.dart';
+import 'package:memory/src/features/memory/presentation/memory_provider.dart';
+import 'package:memory/src/features/memory/data/diet_history_provider.dart';
+import 'package:memory/src/features/todo/presentation/todo_screen.dart';
+import 'package:memory/src/features/shopping_list/presentation/shopping_list_screen.dart';
+import 'package:memory/src/features/shopping_list/data/shopping_list_provider.dart';
+import 'package:memory/src/features/memory/presentation/memory_screen.dart';
+import 'package:memory/src/theme/theme_provider.dart';
 
 class GroupDetailScreen extends StatefulWidget {
   final DatabaseRepository databaseRepository;

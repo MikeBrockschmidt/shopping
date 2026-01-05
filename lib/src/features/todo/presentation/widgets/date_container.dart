@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shopping/src/theme/palette.dart';
+import 'package:memory/src/theme/palette.dart';
 
 class DateContainer extends StatelessWidget {
   final String day;

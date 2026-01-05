@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shopping/src/features/shopping_list/data/shopping_icons.dart';
-import 'package:shopping/src/services/image_service.dart';
+import 'package:memory/src/features/shopping_list/data/shopping_icons.dart';
+import 'package:memory/src/services/image_service.dart';
 
 class IconImageSelection {
   final bool isCustomImage;

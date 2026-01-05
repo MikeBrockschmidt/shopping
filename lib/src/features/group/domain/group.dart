@@ -1,4 +1,4 @@
-import 'package:shopping/src/features/auth/domain/app_user.dart';
+import 'package:memory/src/features/auth/domain/app_user.dart';
 
 class Group {
   final String id;

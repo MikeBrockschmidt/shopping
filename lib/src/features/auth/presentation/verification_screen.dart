@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shopping/src/data/auth_repository.dart';
+import 'package:memory/src/data/auth_repository.dart';
 
 class VerificationScreen extends StatefulWidget {
   final AuthRepository auth;

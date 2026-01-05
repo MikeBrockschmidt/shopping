@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 
-import 'package:shopping/src/data/auth_repository.dart';
-import 'package:shopping/src/data/database_repository.dart';
-import 'package:shopping/src/features/group/domain/group.dart';
-import 'package:shopping/src/features/auth/domain/app_user.dart';
-import 'package:shopping/src/features/group/presentation/group_detail_screen.dart';
-import 'package:shopping/src/features/group/presentation/widgets/group_choice_card.dart';
-import 'package:shopping/src/features/group/presentation/widgets/group_display_card.dart';
-import 'package:shopping/src/theme/theme_provider.dart';
+import 'package:memory/src/data/auth_repository.dart';
+import 'package:memory/src/data/database_repository.dart';
+import 'package:memory/src/features/group/domain/group.dart';
+import 'package:memory/src/features/auth/domain/app_user.dart';
+import 'package:memory/src/features/group/presentation/group_detail_screen.dart';
+import 'package:memory/src/features/group/presentation/widgets/group_choice_card.dart';
+import 'package:memory/src/features/group/presentation/widgets/group_display_card.dart';
+import 'package:memory/src/theme/theme_provider.dart';
 
 class GroupSelectionScreen extends StatefulWidget {
   final AuthRepository authRepository;

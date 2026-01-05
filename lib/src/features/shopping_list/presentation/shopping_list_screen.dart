@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shopping/src/features/shopping_list/data/shopping_list_provider.dart';
-import 'package:shopping/src/features/shopping_list/data/shopping_icons.dart';
-import 'package:shopping/src/features/shopping_list/presentation/collected_items_screen.dart';
-import 'package:shopping/src/features/shopping_list/presentation/widgets/add_item_dialog.dart';
+import 'package:memory/src/features/shopping_list/data/shopping_list_provider.dart';
+import 'package:memory/src/features/shopping_list/data/shopping_icons.dart';
+import 'package:memory/src/features/shopping_list/presentation/collected_items_screen.dart';
+import 'package:memory/src/features/shopping_list/presentation/widgets/add_item_dialog.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   final String groupId;

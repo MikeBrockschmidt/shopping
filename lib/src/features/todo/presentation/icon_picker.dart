@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shopping/src/features/todo/domain/todo.dart';
-import 'package:shopping/src/theme/palette.dart';
+import 'package:memory/src/features/todo/domain/todo.dart';
+import 'package:memory/src/theme/palette.dart';
 
 class IconPicker extends StatefulWidget {
   final void Function(TodoIcon icon) onIconChanged;

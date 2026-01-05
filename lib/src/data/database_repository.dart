@@ -1,11 +1,11 @@
 // lib/src/data/database_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shopping/src/features/group/domain/group.dart';
-import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
-import 'package:shopping/src/features/todo/domain/todo.dart';
-import 'package:shopping/src/features/auth/domain/app_user.dart';
-import 'package:shopping/src/features/memory/domain/memory_item.dart';
+import 'package:memory/src/features/group/domain/group.dart';
+import 'package:memory/src/features/shopping_list/data/shopping_item.dart';
+import 'package:memory/src/features/todo/domain/todo.dart';
+import 'package:memory/src/features/auth/domain/app_user.dart';
+import 'package:memory/src/features/memory/domain/memory_item.dart';
 
 class DatabaseRepository {
   final FirebaseFirestore _firestore;

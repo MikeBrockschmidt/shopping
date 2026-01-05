@@ -1,4 +1,4 @@
-import 'package:shopping/src/features/todo/domain/todo.dart';
+import 'package:memory/src/features/todo/domain/todo.dart';
 import 'package:flutter/material.dart';
 
 class PrioritySlider extends StatefulWidget {

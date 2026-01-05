@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:shopping/src/data/database_repository.dart';
-import 'package:shopping/src/features/todo/domain/todo.dart';
-import 'package:shopping/src/features/todo/presentation/icon_picker.dart';
-import 'package:shopping/src/features/todo/presentation/widgets/color_slider.dart';
-import 'package:shopping/src/features/todo/presentation/widgets/priority_slider.dart';
-import 'package:shopping/src/common/date_formats.dart';
+import 'package:memory/src/data/database_repository.dart';
+import 'package:memory/src/features/todo/domain/todo.dart';
+import 'package:memory/src/features/todo/presentation/icon_picker.dart';
+import 'package:memory/src/features/todo/presentation/widgets/color_slider.dart';
+import 'package:memory/src/features/todo/presentation/widgets/priority_slider.dart';
+import 'package:memory/src/common/date_formats.dart';
 
 class AddTodoScreen extends StatefulWidget {
   final DatabaseRepository db;
