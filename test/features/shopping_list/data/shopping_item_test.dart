@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shopping/src/features/shopping_list/data/shopping_item.dart';
+import 'package:memory/src/features/shopping_list/data/shopping_item.dart';
 
 void main() {
   group('ShoppingItem with Image Support', () {
