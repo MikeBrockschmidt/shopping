@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shopping/src/data/auth_repository.dart';
 import 'package:shopping/src/data/database_repository.dart';
 import 'package:shopping/src/features/memory/presentation/memory_provider.dart';
+import 'package:shopping/src/features/memory/data/diet_history_provider.dart';
 import 'package:shopping/src/features/todo/presentation/todo_screen.dart';
 import 'package:shopping/src/features/shopping_list/presentation/shopping_list_screen.dart';
 import 'package:shopping/src/features/shopping_list/data/shopping_list_provider.dart';
@@ -41,6 +42,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         ChangeNotifierProvider(
           create: (_) =>
               MemoryProvider(widget.databaseRepository, widget.groupId),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => DietHistoryProvider(groupId: widget.groupId),
         ),
       ],
       child: Scaffold(

@@ -136,7 +136,7 @@ class _GroupSelectionScreenState extends State<GroupSelectionScreen> {
                             // Überprüfen, ob der aktuelle Benutzer der Ersteller der Gruppe ist
                             // oder ob er das Recht hat, die Gruppe zu löschen.
                             // Hier eine einfache Logik: Nur der Ersteller kann löschen.
-                            if (currentUser?.uid == group.creatorId) {
+                            if (currentUser.uid == group.creatorId) {
                               await widget.databaseRepository.deleteGroup(
                                 group.id,
                               );

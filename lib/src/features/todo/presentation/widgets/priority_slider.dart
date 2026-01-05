@@ -1,6 +1,5 @@
 import 'package:shopping/src/features/todo/domain/todo.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart' hide Priority;
 
 class PrioritySlider extends StatefulWidget {
   final void Function(Priority p) onPriorityChanged;
