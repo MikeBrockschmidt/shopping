@@ -302,109 +302,94 @@ class _MemoryScreenState extends State<MemoryScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                          child: ExpansionTile(
+                            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            title: Text(
+                              'Hast du heute was süßes oder fettiges gegessen?',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.show_chart, color: Colors.blue),
+                              tooltip: 'Statistik anzeigen',
+                              onPressed: () {
+                                final dietHistoryProvider = context.read<DietHistoryProvider>();
+                                showDialog(
+                                  context: context,
+                                  builder: (dialogContext) => ChangeNotifierProvider.value(
+                                    value: dietHistoryProvider,
+                                    child: DietHistoryChartDialog(groupId: widget.groupId),
+                                  ),
+                                );
+                              },
+                            ),
+                            children: [
+                              const SizedBox(height: 4),
+                              SizedBox(
+                                height: 84,
+                                child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        'Hast du heute was süßes oder fettiges gegessen?',
-                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.show_chart, color: Colors.blue),
-                                      tooltip: 'Statistik anzeigen',
-                                      onPressed: () {
-                                        final dietHistoryProvider = context.read<DietHistoryProvider>();
-                                        showDialog(
-                                          context: context,
-                                          builder: (dialogContext) => ChangeNotifierProvider.value(
-                                            value: dietHistoryProvider,
-                                            child: DietHistoryChartDialog(groupId: widget.groupId),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          _buildAmpelCircle(
+                                            label: 'Nein',
+                                            color: Colors.green,
+                                            isSelected: _dietStatusPerDay[dayIndex] == 1,
+                                            onTap: () => _setDietStatus(dayIndex, 1),
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  height: 84,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            _buildAmpelCircle(
-                                              label: 'Nein',
-                                              color: Colors.green,
-                                              isSelected: _dietStatusPerDay[dayIndex] == 1,
-                                              onTap: () => _setDietStatus(dayIndex, 1),
-                                            ),
-                                            _buildAmpelCircle(
-                                              label: 'Neutral',
-                                              color: Colors.amber,
-                                              isSelected: _dietStatusPerDay[dayIndex] == 2,
-                                              onTap: () => _setDietStatus(dayIndex, 2),
-                                            ),
-                                            _buildAmpelCircle(
-                                              label: 'Ja',
-                                              color: Colors.red,
-                                              isSelected: _dietStatusPerDay[dayIndex] == 3,
-                                              onTap: () => _setDietStatus(dayIndex, 3),
-                                            ),
-                                          ],
-                                        ),
+                                          _buildAmpelCircle(
+                                            label: 'Neutral',
+                                            color: Colors.amber,
+                                            isSelected: _dietStatusPerDay[dayIndex] == 2,
+                                            onTap: () => _setDietStatus(dayIndex, 2),
+                                          ),
+                                          _buildAmpelCircle(
+                                            label: 'Ja',
+                                            color: Colors.red,
+                                            isSelected: _dietStatusPerDay[dayIndex] == 3,
+                                            onTap: () => _setDietStatus(dayIndex, 3),
+                                          ),
+                                        ],
                                       ),
-                                      GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTap: () {
-                                          print('DEBUG: Fertig button pressed, dayIndex=$dayIndex');
-                                          final status = _dietStatusPerDay[dayIndex];
-                                          print('DEBUG: Status=$status');
+                                    ),
+                                    GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () {
+                                        if (_dietStatusPerDay[dayIndex] == 0) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Bitte wähle erst eine Option'),
+                                              duration: Duration(seconds: 1),
+                                            ),
+                                          );
+                                          return;
+                                        }
 
-                                          if (status == 0) {
-                                            print('DEBUG: No status selected');
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Bitte wähle erst eine Option'),
-                                                duration: Duration(seconds: 1),
-                                              ),
-                                            );
-                                            return;
-                                          }
+                                        final selectedTriggers = List<String>.from(_dietTriggersPerDay[dayIndex]);
+                                        final notes = _dietNotesPerDay[dayIndex];
 
-                                          final selectedTriggers =
-                                              List<String>.from(_dietTriggersPerDay[dayIndex]);
-                                          final notes = _dietNotesPerDay[dayIndex];
+                                        setState(() {
+                                          _visibleTodos[dayIndex]['diet'] = false;
+                                        });
 
-                                          print('DEBUG: Saving status...');
-                                          setState(() {
-                                            _visibleTodos[dayIndex]['diet'] = false;
-                                          });
-
-                                          final targetDate = DateTime.now().add(Duration(days: dayIndex));
-                                          print('DEBUG: targetDate=$targetDate');
-
-                                          final dietProvider = context.read<DietHistoryProvider>();
-                                          dietProvider
-                                              .saveDietStatus(status, date: targetDate, triggers: selectedTriggers, notes: notes)
-                                              .then((_) {
-                                            print('DEBUG: Save completed');
-                                            dietProvider.fetchDietHistory().then((_) {
-                                              print('DEBUG: Fetch completed');
+                                        final targetDate = DateTime.now().add(Duration(days: dayIndex));
+                                        final dietProvider = context.read<DietHistoryProvider>();
+                                        dietProvider
+                                            .saveDietStatus(
+                                              _dietStatusPerDay[dayIndex],
+                                              date: targetDate,
+                                              triggers: selectedTriggers,
+                                              notes: notes,
+                                            )
+                                            .then((_) => dietProvider.fetchDietHistory())
+                                            .then((_) {
+                                              final errorMsg = dietProvider.errorMessage;
                                               if (mounted) {
-                                                final errorMsg = dietProvider.errorMessage;
-                                                print('DEBUG: errorMsg=$errorMsg');
                                                 if (errorMsg != null && errorMsg.isNotEmpty) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     SnackBar(
@@ -423,102 +408,99 @@ class _MemoryScreenState extends State<MemoryScreen> {
                                                   );
                                                 }
                                               }
+                                            })
+                                            .catchError((e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('Fehler: $e'),
+                                                    duration: const Duration(seconds: 2),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              }
                                             });
-                                          }).catchError((e) {
-                                            print('DEBUG: Error=$e');
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: Text('Fehler: $e'),
-                                                  duration: const Duration(seconds: 2),
-                                                  backgroundColor: Colors.red,
-                                                ),
-                                              );
-                                            }
-                                          });
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
-                                          child: const Icon(Icons.check_circle_outline, size: 24),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Was war der Auslöser? (optional)',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(color: Colors.grey[700]),
-                                ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: _triggerOptions.map((tag) {
-                                    final isSelected = _dietTriggersPerDay[dayIndex].contains(tag);
-                                    return FilterChip(
-                                      label: Text(tag),
-                                      selected: isSelected,
-                                      onSelected: (_) => _toggleTrigger(dayIndex, tag),
-                                    );
-                                  }).toList(),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Notiz (optional)',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(color: Colors.grey[700]),
-                                ),
-                                const SizedBox(height: 8),
-                                TextField(
-                                  controller: _noteControllers[dayIndex],
-                                  maxLines: 2,
-                                  decoration: InputDecoration(
-                                    hintText: 'z.B. Pizza und Eistee gegessen',
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.all(12),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    ElevatedButton.icon(
-                                      onPressed: () {
-                                        final dietProvider = context.read<DietHistoryProvider>();
-                                        final targetDate = DateTime.now().add(Duration(days: dayIndex));
-                                        dietProvider.deleteDietStatus(targetDate).then((_) {
-                                          setState(() => _visibleTodos[dayIndex]['diet'] = false);
-                                          dietProvider.fetchDietHistory();
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Eintrag gelöscht'),
-                                              duration: Duration(seconds: 1),
-                                            ),
-                                          );
-                                        }).catchError((e) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Fehler: $e'),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                        });
                                       },
-                                      icon: const Icon(Icons.delete),
-                                      label: const Text('Löschen'),
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade400),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                              horizontal: 16,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blueAccent,
+                                              borderRadius: BorderRadius.circular(12.0),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(Icons.check, color: Colors.white),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  'Fertig',
+                                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            'Speichern',
+                                            style: Theme.of(context).textTheme.bodySmall,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Was war der Auslöser? (Mehrfachauswahl möglich)',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _triggerOptions.map((tag) {
+                                  final isSelected = _dietTriggersPerDay[dayIndex].contains(tag);
+                                  return FilterChip(
+                                    label: Text(tag),
+                                    selected: isSelected,
+                                    onSelected: (_) => _toggleTrigger(dayIndex, tag),
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Notiz (optional)',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: _noteControllers[dayIndex],
+                                maxLines: 2,
+                                decoration: InputDecoration(
+                                  hintText: 'z.B. Pizza und Eistee gegessen',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.all(12),
+                                ),
+                                onChanged: (value) {
+                                  _dietNotesPerDay[dayIndex] = value;
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                           ),
                         ),
                       ),
