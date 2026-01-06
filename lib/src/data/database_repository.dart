@@ -6,6 +6,7 @@ import 'package:drei/src/features/shopping_list/data/shopping_item.dart';
 import 'package:drei/src/features/todo/domain/todo.dart';
 import 'package:drei/src/features/auth/domain/app_user.dart';
 import 'package:drei/src/features/memory/domain/memory_item.dart';
+import 'package:drei/src/features/memory/domain/medication.dart';
 
 class DatabaseRepository {
   final FirebaseFirestore _firestore;
@@ -299,6 +300,64 @@ class DatabaseRepository {
         .doc(groupId)
         .collection('memories')
         .doc(memoryId)
+        .delete();
+  }
+
+  // Medications (per group)
+  Stream<List<Medication>> getMedicationsStream(String groupId) {
+    return _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('medications')
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => Medication.fromMap(doc.data(), doc.id))
+              .toList();
+        });
+  }
+
+  Future<void> createMedication(String groupId, Medication medication) async {
+    final newDocRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('medications')
+        .doc();
+
+    final toSave = medication
+        .copyWith(id: newDocRef.id, groupId: groupId)
+        .toMap();
+
+    await newDocRef.set(toSave);
+  }
+
+  Future<void> updateMedication(
+    String groupId,
+    String medicationId, {
+    required String name,
+    required String frequency,
+    int? weekday,
+  }) async {
+    final data = {
+      'name': name,
+      'frequency': frequency,
+      'weekday': weekday,
+    };
+    await _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('medications')
+        .doc(medicationId)
+        .update(data);
+  }
+
+  Future<void> deleteMedication(String groupId, String medicationId) async {
+    await _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('medications')
+        .doc(medicationId)
         .delete();
   }
 }
