@@ -16,16 +16,12 @@ class MemoryScreen extends StatefulWidget {
 class _MemoryScreenState extends State<MemoryScreen> {
   final List<double> _glassesOpacity = List.generate(8, (_) => 0.5);
   
-  // Medikamente für jeden Tag (7 Tage x 5 Medikamente)
-  List<List<bool>> _medicationsPerDay = List.generate(7, (_) => List.generate(5, (_) => false));
-  
-  final List<String> _medications = [
-    'Medikament 1',
-    'Medikament 2',
-    'Medikament 3',
-    'Medikament 4',
-    'Medikament 5',
-  ];
+  // Medikamente für jeden Tag (dynamisch)
+  late List<List<bool>> _medicationsPerDay;
+
+  late List<String> _medicationNames;
+  late List<String> _medicationFrequency; // 'daily' oder 'weekly'
+  late List<int> _medicationWeekday; // 1-7 (Mo-So) wenn weekly
 
   final List<String> _triggerOptions = const [
     'Zu fettig',
@@ -123,6 +119,10 @@ class _MemoryScreenState extends State<MemoryScreen> {
   @override
   void initState() {
     super.initState();
+    _medicationNames = ['Medikament 1', 'Medikament 2', 'Medikament 3', 'Medikament 4', 'Medikament 5'];
+    _medicationFrequency = List.generate(_medicationNames.length, (_) => 'daily');
+    _medicationWeekday = List.generate(_medicationNames.length, (_) => 1);
+    _medicationsPerDay = List.generate(7, (_) => List.generate(_medicationNames.length, (_) => false));
     context.read<MemoryProvider>().addListener(_memoryProviderListener);
     _calculateCurrentLiters();
     _noteControllers = List.generate(
@@ -160,6 +160,190 @@ class _MemoryScreenState extends State<MemoryScreen> {
         selected.add(tag);
       }
     });
+  }
+
+  void _openMedicationNameEditor() {
+    final controllers = List.generate(
+      _medicationNames.length,
+      (index) => TextEditingController(text: _medicationNames[index]),
+    );
+    final frequencies = List.from(_medicationFrequency);
+    final weekdays = List.from(_medicationWeekday);
+
+    const weekdayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                top: 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Medikamente bearbeiten',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline),
+                          onPressed: () {
+                            setModalState(() {
+                              controllers.add(TextEditingController(text: 'Neues Medikament'));
+                              frequencies.add('daily');
+                              weekdays.add(1);
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...List.generate(controllers.length, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: controllers[index],
+                                    decoration: InputDecoration(
+                                      labelText: 'Medikament ${index + 1}',
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (controllers.length > 1)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        controllers.removeAt(index);
+                                        frequencies.removeAt(index);
+                                        weekdays.removeAt(index);
+                                      });
+                                    },
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: DropdownButton<String>(
+                                    value: frequencies[index],
+                                    isExpanded: true,
+                                    items: const [
+                                      DropdownMenuItem(value: 'daily', child: Text('Täglich')),
+                                      DropdownMenuItem(value: 'weekly', child: Text('Wöchentlich')),
+                                    ],
+                                    onChanged: (value) {
+                                      setModalState(() {
+                                        frequencies[index] = value ?? 'daily';
+                                      });
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (frequencies[index] == 'weekly')
+                                  Expanded(
+                                    child: DropdownButton<int>(
+                                      value: weekdays[index],
+                                      isExpanded: true,
+                                      items: List.generate(
+                                        7,
+                                        (i) => DropdownMenuItem(
+                                          value: i + 1,
+                                          child: Text(weekdayNames[i]),
+                                        ),
+                                      ),
+                                      onChanged: (value) {
+                                        setModalState(() {
+                                          weekdays[index] = value ?? 1;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            for (var i = 0; i < controllers.length; i++) {
+                              controllers[i].dispose();
+                            }
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Abbrechen'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _medicationNames = List.generate(controllers.length, (i) {
+                                final value = controllers[i].text.trim();
+                                return value.isEmpty ? 'Medikament ${i + 1}' : value;
+                              });
+                              _medicationFrequency = List<String>.from(frequencies);
+                              _medicationWeekday = List<int>.from(weekdays);
+                              // Anpassen von _medicationsPerDay auf neue Länge
+                              for (var dayIdx = 0; dayIdx < 7; dayIdx++) {
+                                if (_medicationsPerDay[dayIdx].length != _medicationNames.length) {
+                                  _medicationsPerDay[dayIdx] = List.generate(_medicationNames.length, (idx) {
+                                    return idx < _medicationsPerDay[dayIdx].length ? _medicationsPerDay[dayIdx][idx] : false;
+                                  });
+                                }
+                              }
+                            });
+                            for (var controller in controllers) {
+                              controller.dispose();
+                            }
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Speichern'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  bool _isMedicationVisibleOnDay(int medIndex, int dayIndex) {
+    final frequency = _medicationFrequency[medIndex];
+    if (frequency == 'daily') return true;
+    final targetDate = DateTime.now().add(Duration(days: dayIndex));
+    final dayWeekday = targetDate.weekday; // 1 = Mo, 7 = So
+    return dayWeekday == _medicationWeekday[medIndex];
   }
 
   Widget _buildAmpelCircle({
@@ -547,18 +731,47 @@ class _MemoryScreenState extends State<MemoryScreen> {
                             ),
                             children: <Widget>[
                               Column(
-                                children: List.generate(5, (medIndex) =>
+                                children: [
                                   CheckboxListTile(
-                                    title: Text(_medications[medIndex]),
-                                    value: _medicationsPerDay[dayIndex][medIndex],
+                                    title: const Text('Alle genommen'),
+                                    value: _medicationsPerDay[dayIndex].every((e) => e),
                                     onChanged: (bool? value) {
                                       setState(() {
-                                        _medicationsPerDay[dayIndex][medIndex] = value ?? false;
+                                        final newValue = value ?? false;
+                                        _medicationsPerDay[dayIndex] = List.generate(_medicationNames.length, (_) => newValue);
                                         if (_medicationsPerDay[dayIndex].every((e) => e)) {
                                           _visibleTodos[dayIndex]['medications'] = false;
                                         }
                                       });
                                     },
+                                  ),
+                                   ...List.generate(_medicationNames.length, (medIndex) {
+                                     if (!_isMedicationVisibleOnDay(medIndex, dayIndex)) {
+                                       return const SizedBox.shrink();
+                                     }
+                                     return CheckboxListTile(
+                                       title: Text(_medicationNames[medIndex]),
+                                       value: _medicationsPerDay[dayIndex][medIndex],
+                                       onChanged: (bool? value) {
+                                         setState(() {
+                                           _medicationsPerDay[dayIndex][medIndex] = value ?? false;
+                                           if (_medicationsPerDay[dayIndex].every((e) => e)) {
+                                             _visibleTodos[dayIndex]['medications'] = false;
+                                           }
+                                         });
+                                       },
+                                     );
+                                   }),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton.icon(
+                                    onPressed: _openMedicationNameEditor,
+                                    icon: const Icon(Icons.edit_outlined),
+                                    label: const Text('Namen bearbeiten'),
                                   ),
                                 ),
                               ),

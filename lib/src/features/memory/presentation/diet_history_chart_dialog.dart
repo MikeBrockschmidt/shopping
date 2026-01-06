@@ -154,7 +154,7 @@ class _DietHistoryChartDialogState extends State<DietHistoryChartDialog> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: SizedBox(
-                          height: 320,
+                          height: 360,
                           width: 320,
                           child: _viewMode == 'trend'
                               ? _buildLineChart(provider)
@@ -166,11 +166,11 @@ class _DietHistoryChartDialogState extends State<DietHistoryChartDialog> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildLegendItem('Nein', Colors.green),
+                        _buildLegendItem('Gut', Colors.green),
                         const SizedBox(width: 16),
                         _buildLegendItem('Neutral', Colors.amber),
                         const SizedBox(width: 16),
-                        _buildLegendItem('Ja', Colors.red),
+                        _buildLegendItem('Nicht so', Colors.red),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -316,11 +316,11 @@ class _DietHistoryChartDialogState extends State<DietHistoryChartDialog> {
   String _statusLabel(int status) {
     switch (status) {
       case 1:
-        return 'Nein';
+        return 'Gut';
       case 2:
         return 'Neutral';
       case 3:
-        return 'Ja';
+        return 'Nicht so';
       default:
         return 'Keine Angabe';
     }
@@ -500,7 +500,7 @@ class _DietHistoryChartDialogState extends State<DietHistoryChartDialog> {
               showTitles: true,
               interval: 1,
               getTitlesWidget: (value, meta) {
-                const labels = ['Keine', 'Nein', 'Neutral', 'Ja'];
+                const labels = ['Keine', 'Gut', 'Neutral', 'Nicht so'];
                 if (value >= 0 && value < labels.length) {
                   return Text(
                     labels[value.toInt()],
@@ -559,13 +559,13 @@ class _DietHistoryChartDialogState extends State<DietHistoryChartDialog> {
                 String statusLabel;
                 switch (p.status) {
                   case 1:
-                    statusLabel = 'Grün – Ruhig';
+                    statusLabel = 'Grün – Gut';
                     break;
                   case 2:
-                    statusLabel = 'Gelb – Sensibel';
+                    statusLabel = 'Gelb – Neutral';
                     break;
                   case 3:
-                    statusLabel = 'Rot – Akut';
+                    statusLabel = 'Rot – Nicht so';
                     break;
                   default:
                     statusLabel = 'Keine Angabe';
@@ -604,6 +604,7 @@ class _DietHistoryChartDialogState extends State<DietHistoryChartDialog> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
+              reservedSize: 44,
               getTitlesWidget: (value, meta) {
                 switch (value.toInt()) {
                   case 0:
