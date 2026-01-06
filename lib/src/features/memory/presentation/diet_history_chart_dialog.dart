@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../data/diet_history_provider.dart';
+import '../data/diet_history_model.dart';
 
 class DietHistoryChartDialog extends StatefulWidget {
   final String groupId;
@@ -15,6 +16,8 @@ class DietHistoryChartDialog extends StatefulWidget {
 class _DietHistoryChartDialogState extends State<DietHistoryChartDialog> {
   int _selectedDays = 7;
   String _viewMode = 'trend'; // 'trend' oder 'distribution'
+  DateTime _focusedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  bool _showCalendar = false;
 
   @override
   void initState() {
@@ -78,93 +81,356 @@ class _DietHistoryChartDialogState extends State<DietHistoryChartDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Consumer<DietHistoryProvider>(
         builder: (context, provider, _) {
-          return Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Statistik',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
+          final historyByDate = {
+            for (final h in provider.dietHistory) _dateKey(h.date): h,
+          };
+          final calendarDays = _buildMonthDays(_focusedMonth);
+          final maxHeight = MediaQuery.of(context).size.height * 0.85;
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: maxHeight,
+              minWidth: 320,
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Statistik',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Zeit-Filter (horizontal scroll, damit nichts überläuft)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          _buildFilterButton('7T', 7),
+                          const SizedBox(width: 8),
+                          _buildFilterButton('14T', 14),
+                          const SizedBox(width: 8),
+                          _buildFilterButton('Monat', 30),
+                          const SizedBox(width: 8),
+                          _buildFilterButton('90T', 90),
+                        ],
                       ),
-                ),
-                const SizedBox(height: 20),
-                // Zeit-Filter (horizontal scroll, damit nichts überläuft)
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      _buildFilterButton('7T', 7),
-                      const SizedBox(width: 8),
-                      _buildFilterButton('14T', 14),
-                      const SizedBox(width: 8),
-                      _buildFilterButton('Monat', 30),
-                      const SizedBox(width: 8),
-                      _buildFilterButton('90T', 90),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Trend'),
+                          selected: _viewMode == 'trend',
+                          onSelected: (_) => setState(() => _viewMode = 'trend'),
+                        ),
+                        const SizedBox(width: 8),
+                        ChoiceChip(
+                          label: const Text('Verteilung'),
+                          selected: _viewMode == 'distribution',
+                          onSelected: (_) => setState(() => _viewMode = 'distribution'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Chart
+                    if (provider.isLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      )
+                    else if (provider.dietHistory.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text('Noch keine Daten verfügbar'),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SizedBox(
+                          height: 320,
+                          width: 320,
+                          child: _viewMode == 'trend'
+                              ? _buildLineChart(provider)
+                              : _buildBarChart(provider),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                    // Legende
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildLegendItem('Nein', Colors.green),
+                        const SizedBox(width: 16),
+                        _buildLegendItem('Neutral', Colors.amber),
+                        const SizedBox(width: 16),
+                        _buildLegendItem('Ja', Colors.red),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    if (!provider.isLoading && provider.dietHistory.isNotEmpty) ...[
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => setState(() => _showCalendar = !_showCalendar),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Kalender (Trigger)',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              Icon(_showCalendar ? Icons.expand_less : Icons.expand_more),
+                            ],
+                          ),
+                        ),
+                      ),
+                      AnimatedCrossFade(
+                        firstChild: const SizedBox.shrink(),
+                        secondChild: Column(
+                          children: [
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                IconButton(
+                                  onPressed: () => setState(() => _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1)),
+                                  icon: const Icon(Icons.chevron_left),
+                                ),
+                                Text(
+                                  _monthLabel(_focusedMonth),
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                                IconButton(
+                                  onPressed: () => setState(() => _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1)),
+                                  icon: const Icon(Icons.chevron_right),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: const [
+                                Expanded(child: Center(child: Text('Mo'))),
+                                Expanded(child: Center(child: Text('Di'))),
+                                Expanded(child: Center(child: Text('Mi'))),
+                                Expanded(child: Center(child: Text('Do'))),
+                                Expanded(child: Center(child: Text('Fr'))),
+                                Expanded(child: Center(child: Text('Sa'))),
+                                Expanded(child: Center(child: Text('So'))),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 7,
+                                childAspectRatio: 1,
+                                mainAxisSpacing: 6,
+                                crossAxisSpacing: 6,
+                              ),
+                              itemCount: calendarDays.length,
+                              itemBuilder: (context, index) {
+                                final day = calendarDays[index];
+                                final key = _dateKey(day.date);
+                                final entry = historyByDate[key];
+                                final hasTriggers = (entry?.triggers.isNotEmpty ?? false);
+                                final statusColor = _statusColor(entry?.status ?? 0);
+
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: hasTriggers ? () => _showDayDetails(entry!) : null,
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: hasTriggers ? statusColor.withOpacity(0.14) : Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: hasTriggers ? statusColor.withOpacity(0.7) : Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              day.inMonth ? day.date.day.toString() : '',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                color: day.inMonth ? Colors.black : Colors.grey,
+                                              ),
+                                            ),
+                                            if (hasTriggers)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 4),
+                                                child: Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration: BoxDecoration(
+                                                    color: statusColor,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                        crossFadeState: _showCalendar ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                        duration: const Duration(milliseconds: 180),
+                      ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Trend'),
-                      selected: _viewMode == 'trend',
-                      onSelected: (_) => setState(() => _viewMode = 'trend'),
-                    ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      label: const Text('Verteilung'),
-                      selected: _viewMode == 'distribution',
-                      onSelected: (_) => setState(() => _viewMode = 'distribution'),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Schließen'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                // Chart
-                if (provider.isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: CircularProgressIndicator(),
-                  )
-                else if (provider.dietHistory.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Text('Noch keine Daten verfügbar'),
-                  )
-                else
-                  SizedBox(
-                    height: 300,
-                    width: 320,
-                    child: _viewMode == 'trend'
-                        ? _buildLineChart(provider)
-                        : _buildBarChart(provider),
-                  ),
-                const SizedBox(height: 20),
-                // Legende
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildLegendItem('Nein', Colors.green),
-                    const SizedBox(width: 16),
-                    _buildLegendItem('Neutral', Colors.amber),
-                    const SizedBox(width: 16),
-                    _buildLegendItem('Ja', Colors.red),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Schließen'),
-                ),
-              ],
+              ),
             ),
           );
         },
       ),
+    );
+  }
+
+  String _formatDate(DateTime date) => '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.';
+
+  String _statusLabel(int status) {
+    switch (status) {
+      case 1:
+        return 'Nein';
+      case 2:
+        return 'Neutral';
+      case 3:
+        return 'Ja';
+      default:
+        return 'Keine Angabe';
+    }
+  }
+
+  Color _statusColor(int status) {
+    switch (status) {
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.amber;
+      case 3:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _dateKey(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+  String _monthLabel(DateTime date) {
+    const months = [
+      'Januar',
+      'Februar',
+      'März',
+      'April',
+      'Mai',
+      'Juni',
+      'Juli',
+      'August',
+      'September',
+      'Oktober',
+      'November',
+      'Dezember',
+    ];
+    final monthName = months[date.month - 1];
+    return '$monthName ${date.year}';
+  }
+
+  List<_CalendarDay> _buildMonthDays(DateTime month) {
+    final firstDayOfMonth = DateTime(month.year, month.month, 1);
+    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+    final leadingEmpty = (firstDayOfMonth.weekday + 6) % 7; // Montag = 0
+    final totalCells = leadingEmpty + daysInMonth;
+    final rows = (totalCells / 7).ceil();
+    final cells = rows * 7;
+
+    final days = <_CalendarDay>[];
+    for (int i = 0; i < cells; i++) {
+      final dayNum = i - leadingEmpty + 1;
+      if (dayNum < 1 || dayNum > daysInMonth) {
+        days.add(_CalendarDay(date: firstDayOfMonth, inMonth: false));
+      } else {
+        days.add(
+          _CalendarDay(
+            date: DateTime(month.year, month.month, dayNum),
+            inMonth: true,
+          ),
+        );
+      }
+    }
+    return days;
+  }
+
+  Future<void> _showDayDetails(DietHistory entry) async {
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _formatDate(entry.date),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  Text(_statusLabel(entry.status), style: Theme.of(context).textTheme.bodyMedium),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (entry.triggers.isEmpty)
+                const Text('Keine Trigger für diesen Tag')
+              else ...[
+                const Text('Trigger', style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: entry.triggers.map((t) => Chip(label: Text(t))).toList(),
+                ),
+              ],
+              if (entry.notes.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Text('Notizen', style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                Text(entry.notes),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -412,4 +678,11 @@ class _DayPoint {
     required this.date,
     required this.triggers,
   });
+}
+
+class _CalendarDay {
+  final DateTime date;
+  final bool inMonth;
+
+  _CalendarDay({required this.date, required this.inMonth});
 }

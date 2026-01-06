@@ -209,6 +209,10 @@ class _MemoryScreenState extends State<MemoryScreen> {
       if (index >= 0 && index < _glassesOpacity.length) {
         _glassesOpacity[index] = _glassesOpacity[index] == 0.5 ? 1.0 : 0.5;
         _calculateCurrentLiters();
+        // Wenn alle 8 Gläser voll sind, Trink-Card ausblenden
+        if (_glassesOpacity.every((o) => o == 1.0)) {
+          _visibleTodos[0]['drinking'] = false;
+        }
       }
     });
   }
@@ -258,6 +262,13 @@ class _MemoryScreenState extends State<MemoryScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: List.generate(7, (dayIndex) {
+              final bool allMedsChecked = _medicationsPerDay[dayIndex].every((e) => e);
+              final bool allDrinksChecked = dayIndex == 0 && _glassesOpacity.every((o) => o == 1.0);
+              final bool hasDiet = _visibleTodos[dayIndex]['diet'] == true;
+              final bool hasMeds = _visibleTodos[dayIndex]['medications'] == true && !allMedsChecked;
+              final bool hasDrink = dayIndex == 0 && _visibleTodos[dayIndex]['drinking'] == true && !allDrinksChecked;
+              final bool hasMemory = dayIndex == 0 && !memoryProvider.isLoading &&
+                  memoryProvider.memories.where((memory) => !memory.isArchived).isNotEmpty;
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 elevation: 4.0,
@@ -306,7 +317,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                             tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             title: Text(
-                              'Hast du heute was süßes oder fettiges gegessen?',
+                              'Wie geht es dir heute?',
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -505,8 +516,8 @@ class _MemoryScreenState extends State<MemoryScreen> {
                         ),
                       ),
 
-                    // Medikamente für alle Tage
-                    if (_visibleTodos[dayIndex]['medications'] == true)
+                    // Medikamente für alle Tage; ausblenden, wenn alle abgehakt
+                    if (_visibleTodos[dayIndex]['medications'] == true && !allMedsChecked)
                       Dismissible(
                         key: Key('medications_$dayIndex'),
                         background: Container(
@@ -543,6 +554,9 @@ class _MemoryScreenState extends State<MemoryScreen> {
                                     onChanged: (bool? value) {
                                       setState(() {
                                         _medicationsPerDay[dayIndex][medIndex] = value ?? false;
+                                        if (_medicationsPerDay[dayIndex].every((e) => e)) {
+                                          _visibleTodos[dayIndex]['medications'] = false;
+                                        }
                                       });
                                     },
                                   ),
@@ -552,8 +566,8 @@ class _MemoryScreenState extends State<MemoryScreen> {
                           ),
                         ),
                       ),
-                    // Trinkverhalten nur für Heute (dayIndex == 0)
-                    if (dayIndex == 0 && _visibleTodos[dayIndex]['drinking'] == true)
+                    // Trinkverhalten nur für Heute (dayIndex == 0); ausblenden, wenn alles getrunken
+                    if (dayIndex == 0 && _visibleTodos[dayIndex]['drinking'] == true && !allDrinksChecked)
                       Dismissible(
                         key: Key('drinking_$dayIndex'),
                         background: Container(
@@ -664,8 +678,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                                   ),
                                 ))
                             .toList(),
-                    if (dayIndex != 0 || memoryProvider.isLoading || 
-                        memoryProvider.memories.where((memory) => !memory.isArchived).isEmpty)
+                    if (!(hasDiet || hasMeds || hasDrink || hasMemory))
                       const Padding(
                         padding: EdgeInsets.all(16.0),
                         child: Text('Keine Einträge'),
