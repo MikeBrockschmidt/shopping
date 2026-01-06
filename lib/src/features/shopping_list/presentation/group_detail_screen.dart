@@ -9,6 +9,7 @@ import 'package:drei/src/features/shopping_list/presentation/shopping_list_scree
 import 'package:drei/src/features/shopping_list/data/shopping_list_provider.dart';
 import 'package:drei/src/features/memory/presentation/memory_screen.dart';
 import 'package:drei/src/theme/theme_provider.dart';
+import 'package:drei/src/features/memory/data/medication_provider.dart';
 
 class GroupDetailScreen extends StatefulWidget {
   final DatabaseRepository databaseRepository;
@@ -42,6 +43,10 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         ChangeNotifierProvider(
           create: (_) =>
               MemoryProvider(widget.databaseRepository, widget.groupId),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              MedicationProvider(widget.databaseRepository, widget.groupId),
         ),
         ChangeNotifierProvider(
           create: (_) => DietHistoryProvider(groupId: widget.groupId),
