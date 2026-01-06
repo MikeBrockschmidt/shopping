@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:memory/src/features/shopping_list/data/shopping_item.dart';
-import 'package:memory/src/features/shopping_list/data/shopping_icons.dart';
-import 'package:memory/src/features/shopping_list/presentation/widgets/edit_item_dialog.dart';
+import 'package:drei/src/features/shopping_list/data/shopping_item.dart';
+import 'package:drei/src/features/shopping_list/data/shopping_icons.dart';
+import 'package:drei/src/features/shopping_list/presentation/widgets/edit_item_dialog.dart';
 
 class CollectedItems extends StatelessWidget {
   final List<ShoppingItem> collectedItems;

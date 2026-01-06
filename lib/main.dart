@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:memory/src/theme/app_theme.dart';
-import 'package:memory/firebase_options.dart';
-import 'package:memory/src/data/auth_repository.dart';
-import 'package:memory/src/data/database_repository.dart';
-import 'package:memory/src/features/auth/presentation/login_screen.dart';
-import 'package:memory/src/features/group/presentation/group_selection_screen.dart';
-import 'package:memory/src/features/auth/presentation/verification_screen.dart';
-import 'package:memory/src/theme/theme_provider.dart';
+import 'package:drei/src/theme/app_theme.dart';
+import 'package:drei/firebase_options.dart';
+import 'package:drei/src/data/auth_repository.dart';
+import 'package:drei/src/data/database_repository.dart';
+import 'package:drei/src/features/auth/presentation/login_screen.dart';
+import 'package:drei/src/features/group/presentation/group_selection_screen.dart';
+import 'package:drei/src/features/auth/presentation/verification_screen.dart';
+import 'package:drei/src/theme/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

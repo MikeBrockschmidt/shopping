@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:memory/src/theme/palette.dart';
+import 'package:drei/src/theme/palette.dart';
 
 abstract class AppTheme {
   static final lightTheme =

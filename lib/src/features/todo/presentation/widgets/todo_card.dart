@@ -1,5 +1,5 @@
-import 'package:memory/src/features/todo/domain/todo.dart';
-import 'package:memory/src/theme/palette.dart';
+import 'package:drei/src/features/todo/domain/todo.dart';
+import 'package:drei/src/theme/palette.dart';
 import 'package:flutter/material.dart';
 
 class TodoCard extends StatelessWidget {

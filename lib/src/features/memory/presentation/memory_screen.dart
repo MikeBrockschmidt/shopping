@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:memory/src/features/memory/presentation/memory_provider.dart';
-import 'package:memory/src/features/memory/data/diet_history_provider.dart';
-import 'package:memory/src/features/memory/presentation/diet_history_chart_dialog.dart';
+import 'package:drei/src/features/memory/presentation/memory_provider.dart';
+import 'package:drei/src/features/memory/data/diet_history_provider.dart';
+import 'package:drei/src/features/memory/presentation/diet_history_chart_dialog.dart';
 
 class MemoryScreen extends StatefulWidget {
   final String groupId;

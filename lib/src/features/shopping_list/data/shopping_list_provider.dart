@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:memory/src/data/database_repository.dart';
-import 'package:memory/src/features/shopping_list/data/shopping_item.dart';
-import 'package:memory/src/services/image_service.dart';
+import 'package:drei/src/data/database_repository.dart';
+import 'package:drei/src/features/shopping_list/data/shopping_item.dart';
+import 'package:drei/src/services/image_service.dart';
 import 'package:uuid/uuid.dart';
 
 class ShoppingListProvider with ChangeNotifier {

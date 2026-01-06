@@ -2,19 +2,26 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:memory/src/services/image_service.dart';
+import 'package:drei/src/services/image_service.dart';
 
 // Asset logos
 const List<String> _assetLogos = [
   'assets/logos/Action.jpg',
   'assets/logos/Aldinord.png',
   'assets/logos/Amazon.jpg',
+  'assets/logos/dm.jpg',
   'assets/logos/EDEKA Kuhlmann.jpg',
   'assets/logos/EDEKA Kutsche.jpg',
   'assets/logos/EDEKA-Schinkel.jpg',
   'assets/logos/Edeka-Kallmeyer.jpg',
-  'assets/logos/Lidl.png',
   'assets/logos/expert-benning.jpg',
+  'assets/logos/Kaufland.jpg',
+  'assets/logos/Lidl.png',
+  'assets/logos/Mueller.jpg',
+  'assets/logos/Netto.jpg',
+  'assets/logos/Penny.jpg',
+  'assets/logos/Rossmann.jpg',
+  'assets/logos/toom.jpg',
 ];
 
 class AddItemDialog extends StatefulWidget {
@@ -176,7 +183,59 @@ class _AddItemDialogState extends State<AddItemDialog> {
               ),
               const SizedBox(height: 20),
 
-              // Nur Bild auswählen
+              // Lokale Logos Galerie
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1,
+                ),
+                itemCount: _assetLogos.length,
+                itemBuilder: (context, index) {
+                  final logoPath = _assetLogos[index];
+                  final isSelected = selectedImageUrl == logoPath;
+
+                  return InkWell(
+                    onTap: () => _selectAssetLogo(logoPath),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: isSelected
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey.shade300,
+                          width: isSelected ? 2 : 1,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        color: isSelected
+                            ? Theme.of(context).primaryColor.withAlpha(30)
+                            : Colors.transparent,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.asset(
+                          logoPath,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey.shade400,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Bild auswählen
               InkWell(
                 onTap: _selectImageOnly,
                 borderRadius: BorderRadius.circular(8),
@@ -228,58 +287,6 @@ class _AddItemDialogState extends State<AddItemDialog> {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              // Lokale Logos Galerie
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1,
-                ),
-                itemCount: _assetLogos.length,
-                itemBuilder: (context, index) {
-                  final logoPath = _assetLogos[index];
-                  final isSelected = selectedImageUrl == logoPath;
-
-                  return InkWell(
-                    onTap: () => _selectAssetLogo(logoPath),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: isSelected
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey.shade300,
-                          width: isSelected ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        color: isSelected
-                            ? Theme.of(context).primaryColor.withAlpha(30)
-                            : Colors.transparent,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.asset(
-                          logoPath,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Icon(
-                                Icons.image_not_supported,
-                                color: Colors.grey.shade400,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
               ),
               const SizedBox(height: 24),
 

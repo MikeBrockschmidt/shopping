@@ -2,20 +2,26 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:memory/src/features/shopping_list/data/shopping_item.dart';
-import 'package:memory/src/services/image_service.dart';
+import 'package:drei/src/features/shopping_list/data/shopping_item.dart';
+import 'package:drei/src/services/image_service.dart';
 
 // Asset logos
 const List<String> _assetLogos = [
-  'assets/logos/Action.jpg',
+  'assets/logos/Netto.jpg',
   'assets/logos/Aldinord.png',
   'assets/logos/Amazon.jpg',
   'assets/logos/EDEKA Kuhlmann.jpg',
   'assets/logos/EDEKA Kutsche.jpg',
-  'assets/logos/EDEKA-Schinkel.jpg',
+  'assets/logos/Penny.jpg',
   'assets/logos/Edeka-Kallmeyer.jpg',
   'assets/logos/Lidl.png',
   'assets/logos/expert-benning.jpg',
+  'assets/logos/EDEKA-Schinkel.jpg',
+  'assets/logos/Kaufland.jpg',
+  'assets/logos/Rossmann.jpg',
+  'assets/logos/dm.jpg',
+  'assets/logos/Mueller.jpg',
+  'assets/logos/toom.jpg',
 ];
 
 class EditItemDialog extends StatefulWidget {
@@ -97,7 +103,11 @@ class _EditItemDialogState extends State<EditItemDialog> {
     return imageUrl?.startsWith('assets/') ?? false;
   }
 
-  Widget _buildImageWidget(String imageUrl, {double width = 32, double height = 32}) {
+  Widget _buildImageWidget(
+    String imageUrl, {
+    double width = 32,
+    double height = 32,
+  }) {
     if (_isAssetImage(imageUrl)) {
       return Image.asset(
         imageUrl,
@@ -139,7 +149,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
       price: price,
       imageUrl: selectedImageUrl,
       hasCustomImage: hasCustomImage,
-      isBought: false, // Artikel wird wieder in die "zu kaufen"-Liste verschoben
+      isBought:
+          false, // Artikel wird wieder in die "zu kaufen"-Liste verschoben
     );
 
     widget.onSaveItem(updatedItem);
@@ -171,7 +182,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
                   hintText: 'z.B. 2,99',
                   prefixText: '€ ',
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 textInputAction: TextInputAction.done,
               ),
               const SizedBox(height: 20),
@@ -213,9 +226,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
                             ),
                             Text(
                               'Galerie öffnen',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.grey.shade600),
                             ),
                           ],
                         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:memory/src/data/database_repository.dart';
-import 'package:memory/src/features/memory/domain/memory_item.dart';
+import 'package:drei/src/data/database_repository.dart';
+import 'package:drei/src/features/memory/domain/memory_item.dart';
 
 class MemoryProvider with ChangeNotifier {
   final DatabaseRepository _db;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:memory/src/data/auth_repository.dart';
-import 'package:memory/src/data/database_repository.dart';
-import 'package:memory/src/features/todo/domain/todo.dart';
-import 'package:memory/src/features/todo/presentation/add_todo_screen.dart';
-import 'package:memory/src/features/todo/presentation/widgets/todo_card.dart';
-import 'package:memory/src/theme/palette.dart';
+import 'package:drei/src/data/auth_repository.dart';
+import 'package:drei/src/data/database_repository.dart';
+import 'package:drei/src/features/todo/domain/todo.dart';
+import 'package:drei/src/features/todo/presentation/add_todo_screen.dart';
+import 'package:drei/src/features/todo/presentation/widgets/todo_card.dart';
+import 'package:drei/src/theme/palette.dart';
 
 class TodoScreen extends StatefulWidget {
   final DatabaseRepository db;

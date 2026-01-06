@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memory/src/data/auth_repository.dart';
+import 'package:drei/src/data/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthRepository authRepository;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:memory/src/features/memory/presentation/memory_provider.dart';
+import 'package:drei/src/features/memory/presentation/memory_provider.dart';
 
 class CollectedMemoryScreen extends StatelessWidget {
   final String groupId;
