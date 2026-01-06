@@ -16,14 +16,11 @@ class MemoryScreen extends StatefulWidget {
 }
 
 class _MemoryScreenState extends State<MemoryScreen> {
-  final List<double> _glassesOpacity = List.generate(8, (_) => 0.5);
+  // Trinkverhalten: Gläser-Status pro Tag (7 Tage x 8 Gläser)
+  late List<List<double>> _glassesOpacityPerDay;
   
   // Medikamente für jeden Tag (dynamisch)
   late List<List<bool>> _medicationsPerDay;
-
-  late List<String> _medicationNames;
-  late List<String> _medicationFrequency; // 'daily' oder 'weekly'
-  late List<int> _medicationWeekday; // 1-7 (Mo-So) wenn weekly
 
   final List<String> _triggerOptions = const [
     'Zu fettig',
@@ -54,7 +51,8 @@ class _MemoryScreenState extends State<MemoryScreen> {
     'drinking': true,
   });
 
-  double _currentLiters = 0.0;
+  // Aktuelle Liter pro Tag
+  List<double> _currentLitersPerDay = List.generate(7, (_) => 0.0);
 
   String _getDateLabel(int daysFromNow) {
     final date = DateTime.now().add(Duration(days: daysFromNow));
@@ -121,12 +119,11 @@ class _MemoryScreenState extends State<MemoryScreen> {
   @override
   void initState() {
     super.initState();
-    _medicationNames = ['Medikament 1', 'Medikament 2', 'Medikament 3', 'Medikament 4', 'Medikament 5'];
-    _medicationFrequency = List.generate(_medicationNames.length, (_) => 'daily');
-    _medicationWeekday = List.generate(_medicationNames.length, (_) => 1);
-    _medicationsPerDay = List.generate(7, (_) => List.generate(_medicationNames.length, (_) => false));
+    // Initialize empty medications per day (will be populated dynamically in build)
+    _medicationsPerDay = List.generate(7, (_) => []);
+    // Initialize drinking state per day
+    _glassesOpacityPerDay = List.generate(7, (_) => List.generate(8, (_) => 0.5));
     context.read<MemoryProvider>().addListener(_memoryProviderListener);
-    _calculateCurrentLiters();
     _noteControllers = List.generate(
       7,
       (index) => TextEditingController(text: _dietNotesPerDay[index]),
@@ -142,9 +139,9 @@ class _MemoryScreenState extends State<MemoryScreen> {
     super.dispose();
   }
 
-  void _calculateCurrentLiters() {
-    _currentLiters =
-        _glassesOpacity.where((opacity) => opacity == 1.0).length * 0.2;
+  void _calculateCurrentLiters(int dayIndex) {
+    _currentLitersPerDay[dayIndex] =
+        _glassesOpacityPerDay[dayIndex].where((opacity) => opacity == 1.0).length * 0.2;
   }
 
   void _setDietStatus(int dayIndex, int status) {
@@ -164,181 +161,6 @@ class _MemoryScreenState extends State<MemoryScreen> {
     });
   }
 
-  void _openMedicationNameEditor() {
-    final controllers = List.generate(
-      _medicationNames.length,
-      (index) => TextEditingController(text: _medicationNames[index]),
-    );
-    final frequencies = List.from(_medicationFrequency);
-    final weekdays = List.from(_medicationWeekday);
-
-    const weekdayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                top: 16,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Medikamente bearbeiten',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline),
-                          onPressed: () {
-                            setModalState(() {
-                              controllers.add(TextEditingController(text: 'Neues Medikament'));
-                              frequencies.add('daily');
-                              weekdays.add(1);
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ...List.generate(controllers.length, (index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: controllers[index],
-                                    decoration: InputDecoration(
-                                      labelText: 'Medikament ${index + 1}',
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                if (controllers.length > 1)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                    onPressed: () {
-                                      setModalState(() {
-                                        controllers.removeAt(index);
-                                        frequencies.removeAt(index);
-                                        weekdays.removeAt(index);
-                                      });
-                                    },
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: DropdownButton<String>(
-                                    value: frequencies[index],
-                                    isExpanded: true,
-                                    items: const [
-                                      DropdownMenuItem(value: 'daily', child: Text('Täglich')),
-                                      DropdownMenuItem(value: 'weekly', child: Text('Wöchentlich')),
-                                    ],
-                                    onChanged: (value) {
-                                      setModalState(() {
-                                        frequencies[index] = value ?? 'daily';
-                                      });
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                if (frequencies[index] == 'weekly')
-                                  Expanded(
-                                    child: DropdownButton<int>(
-                                      value: weekdays[index],
-                                      isExpanded: true,
-                                      items: List.generate(
-                                        7,
-                                        (i) => DropdownMenuItem(
-                                          value: i + 1,
-                                          child: Text(weekdayNames[i]),
-                                        ),
-                                      ),
-                                      onChanged: (value) {
-                                        setModalState(() {
-                                          weekdays[index] = value ?? 1;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            for (var i = 0; i < controllers.length; i++) {
-                              controllers[i].dispose();
-                            }
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Abbrechen'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _medicationNames = List.generate(controllers.length, (i) {
-                                final value = controllers[i].text.trim();
-                                return value.isEmpty ? 'Medikament ${i + 1}' : value;
-                              });
-                              _medicationFrequency = List<String>.from(frequencies);
-                              _medicationWeekday = List<int>.from(weekdays);
-                              // Anpassen von _medicationsPerDay auf neue Länge
-                              for (var dayIdx = 0; dayIdx < 7; dayIdx++) {
-                                if (_medicationsPerDay[dayIdx].length != _medicationNames.length) {
-                                  _medicationsPerDay[dayIdx] = List.generate(_medicationNames.length, (idx) {
-                                    return idx < _medicationsPerDay[dayIdx].length ? _medicationsPerDay[dayIdx][idx] : false;
-                                  });
-                                }
-                              }
-                            });
-                            for (var controller in controllers) {
-                              controller.dispose();
-                            }
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Speichern'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
   bool _isMedicationVisibleOnDayWithMeds(List<Medication> meds, int medIndex, int dayIndex) {
     if (medIndex < 0 || medIndex >= meds.length) return false;
@@ -351,7 +173,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
 
   Future<void> _openMedicationEditorWithProvider() async {
     final provider = context.read<MedicationProvider>();
-    final meds = provider.medications;
+    final meds = List<Medication>.from(provider.medications); // Copy to avoid reference issues
 
     final controllers = List.generate(
       meds.length,
@@ -363,20 +185,22 @@ class _MemoryScreenState extends State<MemoryScreen> {
 
     const weekdayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
+    if (!mounted) return;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) {
+      builder: (modalContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (builderContext, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
                 left: 16,
                 right: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                bottom: MediaQuery.of(builderContext).viewInsets.bottom + 16,
                 top: 16,
               ),
               child: SingleChildScrollView(
@@ -389,7 +213,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                       children: [
                         Text(
                           'Medikamente bearbeiten',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                          style: Theme.of(builderContext).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         IconButton(
                           icon: const Icon(Icons.add_circle_outline),
@@ -490,12 +314,16 @@ class _MemoryScreenState extends State<MemoryScreen> {
                             for (var i = 0; i < controllers.length; i++) {
                               controllers[i].dispose();
                             }
-                            Navigator.pop(context);
+                            Navigator.of(modalContext).pop();
                           },
                           child: const Text('Abbrechen'),
                         ),
                         ElevatedButton(
                           onPressed: () async {
+                            // Close modal first
+                            Navigator.of(modalContext).pop();
+
+                            // Then execute all provider operations
                             // Deletes
                             final originalIds = meds.map((m) => m.id).toSet();
                             final newIds = ids.where((id) => id.isNotEmpty).toSet();
@@ -519,10 +347,11 @@ class _MemoryScreenState extends State<MemoryScreen> {
                                 await provider.updateMedication(id: id, name: name, frequency: freq, weekday: wday);
                               }
                             }
+                            
+                            // Clean up controllers
                             for (var controller in controllers) {
                               controller.dispose();
                             }
-                            Navigator.pop(context);
                           },
                           child: const Text('Speichern'),
                         ),
@@ -580,21 +409,22 @@ class _MemoryScreenState extends State<MemoryScreen> {
     );
   }
 
-  void _toggleGlassState(int index) {
+  void _toggleGlassState(int dayIndex, int index) {
     setState(() {
-      if (index >= 0 && index < _glassesOpacity.length) {
-        _glassesOpacity[index] = _glassesOpacity[index] == 0.5 ? 1.0 : 0.5;
-        _calculateCurrentLiters();
-        // Wenn alle 8 Gläser voll sind, Trink-Card ausblenden
-        if (_glassesOpacity.every((o) => o == 1.0)) {
-          _visibleTodos[0]['drinking'] = false;
+      if (index >= 0 && index < _glassesOpacityPerDay[dayIndex].length) {
+        final current = _glassesOpacityPerDay[dayIndex][index];
+        _glassesOpacityPerDay[dayIndex][index] = current == 0.5 ? 1.0 : 0.5;
+        _calculateCurrentLiters(dayIndex);
+        // Wenn alle 8 Gläser voll sind, Trink-Card für diesen Tag ausblenden
+        if (_glassesOpacityPerDay[dayIndex].every((o) => o == 1.0)) {
+          _visibleTodos[dayIndex]['drinking'] = false;
         }
       }
     });
   }
 
-  Widget _buildGlassColumn(int index) {
-    final Color glassColor = _glassesOpacity[index] == 1.0
+  Widget _buildGlassColumn(int dayIndex, int index) {
+    final Color glassColor = _glassesOpacityPerDay[dayIndex][index] == 1.0
         ? Theme.of(context).colorScheme.primary
         : Colors.grey;
 
@@ -602,10 +432,10 @@ class _MemoryScreenState extends State<MemoryScreen> {
       children: [
         IconButton(
           icon: Opacity(
-            opacity: _glassesOpacity[index],
+            opacity: _glassesOpacityPerDay[dayIndex][index],
             child: Icon(Icons.local_drink, size: 60, color: glassColor),
           ),
-          onPressed: () => _toggleGlassState(index),
+          onPressed: () => _toggleGlassState(dayIndex, index),
         ),
         const SizedBox(height: 4),
         Text('0,2L', style: Theme.of(context).textTheme.titleMedium),
@@ -649,13 +479,9 @@ class _MemoryScreenState extends State<MemoryScreen> {
               final visibleMedIndices = List.generate(meds.length, (i) => i)
                   .where((i) => _isMedicationVisibleOnDayWithMeds(meds, i, dayIndex))
                   .toList();
-              final bool allMedsChecked = visibleMedIndices.isEmpty
-                  ? true
-                  : visibleMedIndices.every((i) => _medicationsPerDay[dayIndex][i]);
-              final bool allDrinksChecked = dayIndex == 0 && _glassesOpacity.every((o) => o == 1.0);
               final bool hasDiet = _visibleTodos[dayIndex]['diet'] == true;
-              final bool hasMeds = _visibleTodos[dayIndex]['medications'] == true && !allMedsChecked;
-              final bool hasDrink = dayIndex == 0 && _visibleTodos[dayIndex]['drinking'] == true && !allDrinksChecked;
+              final bool hasMeds = _visibleTodos[dayIndex]['medications'] == true;
+              final bool hasDrink = dayIndex == 0 && _visibleTodos[dayIndex]['drinking'] == true;
               final bool hasMemory = dayIndex == 0 && !memoryProvider.isLoading &&
                   memoryProvider.memories.where((memory) => !memory.isArchived).isNotEmpty;
               return Card(
@@ -905,8 +731,8 @@ class _MemoryScreenState extends State<MemoryScreen> {
                         ),
                       ),
 
-                    // Medikamente für alle Tage; ausblenden, wenn alle abgehakt
-                    if (_visibleTodos[dayIndex]['medications'] == true && !allMedsChecked)
+                    // Medikamente für alle Tage
+                    if (_visibleTodos[dayIndex]['medications'] == true)
                       Dismissible(
                         key: Key('medications_$dayIndex'),
                         background: Container(
@@ -991,8 +817,8 @@ class _MemoryScreenState extends State<MemoryScreen> {
                           ),
                         ),
                       ),
-                    // Trinkverhalten nur für Heute (dayIndex == 0); ausblenden, wenn alles getrunken
-                    if (dayIndex == 0 && _visibleTodos[dayIndex]['drinking'] == true && !allDrinksChecked)
+                    // Trinkverhalten für jeden Tag
+                    if (_visibleTodos[dayIndex]['drinking'] == true)
                       Dismissible(
                         key: Key('drinking_$dayIndex'),
                         background: Container(
@@ -1026,7 +852,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: List.generate(
                                   4,
-                                  (index) => _buildGlassColumn(index),
+                                  (index) => _buildGlassColumn(dayIndex, index),
                                 ),
                               ),
                               const SizedBox(height: 20),
@@ -1034,7 +860,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: List.generate(
                                   4,
-                                  (index) => _buildGlassColumn(index + 4),
+                                  (index) => _buildGlassColumn(dayIndex, index + 4),
                                 ),
                               ),
                               const SizedBox(height: 20),
@@ -1042,7 +868,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 20.0),
                                   child: Text(
-                                    'Stand: ${_currentLiters.toStringAsFixed(1)} von 1,6 Litern',
+                                    'Stand: ${_currentLitersPerDay[dayIndex].toStringAsFixed(1)} von 1,6 Litern',
                                     style: Theme.of(context).textTheme.titleMedium,
                                     textAlign: TextAlign.center,
                                   ),
