@@ -61,15 +61,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         : 'assets/images/wedoshopping_sh.png';
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        toolbarHeight: 200,
-        elevation: 16,
-        flexibleSpace: FlexibleSpaceBar(
-          centerTitle: true,
-          background: Image.asset(backgroundImage, fit: BoxFit.cover),
-        ),
-      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -233,17 +224,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                      if (item.price != null)
-                                        Text(
-                                          '€ ${item.price!.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            decoration: item.isBought
-                                                ? TextDecoration.lineThrough
-                                                : null,
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
-                                          ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item.price != null 
+                                            ? '€ ${item.price!.toStringAsFixed(2)}'
+                                            : '€ --.--',
+                                        style: TextStyle(
+                                          decoration: item.isBought
+                                              ? TextDecoration.lineThrough
+                                              : null,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(context).primaryColor,
                                         ),
+                                      ),
                                     ],
                                   ),
                                 ),

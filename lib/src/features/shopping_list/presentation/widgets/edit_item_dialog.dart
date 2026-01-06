@@ -142,7 +142,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
   void _saveItem() {
     double? price;
     if (_priceController.text.trim().isNotEmpty) {
-      price = double.tryParse(_priceController.text.trim());
+      // Replace comma with dot for German input (e.g., "2,99" -> "2.99")
+      final priceText = _priceController.text.trim().replaceAll(',', '.');
+      price = double.tryParse(priceText);
     }
 
     final updatedItem = widget.item.copyWith(

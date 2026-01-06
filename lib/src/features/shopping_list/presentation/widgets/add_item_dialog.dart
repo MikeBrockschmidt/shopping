@@ -21,6 +21,9 @@ const List<String> _assetLogos = [
   'assets/logos/Netto.jpg',
   'assets/logos/Penny.jpg',
   'assets/logos/Rossmann.jpg',
+  'assets/logos/GetraenkeHoffmann.jpg',
+  'assets/logos/trinkgut.jpg',
+  'assets/logos/ThomasPhillips.jpg',
   'assets/logos/toom.jpg',
 ];
 
@@ -134,7 +137,9 @@ class _AddItemDialogState extends State<AddItemDialog> {
     if (name.isNotEmpty) {
       double? price;
       if (_priceController.text.trim().isNotEmpty) {
-        price = double.tryParse(_priceController.text.trim());
+        // Replace comma with dot for German input (e.g., "2,99" -> "2.99")
+        final priceText = _priceController.text.trim().replaceAll(',', '.');
+        price = double.tryParse(priceText);
       }
       widget.onAddItem(name, selectedIcon, selectedImageUrl, hasCustomImage, price);
       Navigator.of(context).pop();
@@ -180,6 +185,23 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 textInputAction: TextInputAction.done,
+              ),
+              const SizedBox(height: 20),
+
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Abbrechen'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _addItem,
+                    child: const Text('Hinzufügen'),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
@@ -289,22 +311,6 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Abbrechen'),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _addItem,
-                    child: const Text('Hinzufügen'),
-                  ),
-                ],
-              ),
             ],
           ),
         ),

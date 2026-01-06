@@ -11,13 +11,30 @@ class ShoppingListProvider with ChangeNotifier {
   List<ShoppingItem> _items = [];
   bool _isLoading = false;
   String? _errorMessage;
+  late final Stream<List<ShoppingItem>> _itemsStream;
 
   List<ShoppingItem> get items => _items;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  Stream<List<ShoppingItem>> get itemsStream => _itemsStream;
 
   ShoppingListProvider(this._databaseRepository, this._groupId) {
-    _loadShoppingList();
+    _itemsStream = _databaseRepository.getShoppingItemsStream(_groupId);
+    _listenToStream();
+  }
+
+  void _listenToStream() {
+    _itemsStream.listen(
+      (items) {
+        _items = items;
+        _isLoading = false;
+        notifyListeners();
+      },
+      onError: (error) {
+        print('ShoppingListProvider stream error: $error');
+        _setErrorMessage('Fehler beim Laden der Einkaufsliste: ${error.toString()}');
+      },
+    );
   }
 
   void _setLoading(bool value) {
@@ -34,27 +51,6 @@ class ShoppingListProvider with ChangeNotifier {
     if (_errorMessage != null) {
       _errorMessage = null;
       notifyListeners();
-    }
-  }
-
-  Future<void> _loadShoppingList() async {
-    _setLoading(true);
-    _setErrorMessage(null);
-
-    try {
-      print('ShoppingListProvider: Loading shopping list for group $_groupId');
-
-      // Stream listening instead of .first to avoid permission errors
-      final stream = _databaseRepository.getShoppingItemsStream(_groupId);
-      _items = await stream.first;
-
-      print('ShoppingListProvider: Successfully loaded ${_items.length} items');
-    } catch (e) {
-      print('ShoppingListProvider: Error loading shopping list: $e');
-      _setErrorMessage('Fehler beim Laden der Einkaufsliste: ${e.toString()}');
-      _items = [];
-    } finally {
-      _setLoading(false);
     }
   }
 
@@ -91,7 +87,7 @@ class ShoppingListProvider with ChangeNotifier {
       print('Item data: ${newItem.toMap()}');
 
       await _databaseRepository.createShoppingItem(_groupId, newItem);
-      _items.add(newItem);
+      // Artikel wird automatisch über Stream aktualisiert, nicht manuell hinzufügen
 
       if (hasCustomImage && imageUrl != null) {
         print('Successfully created shopping item: ${newItem.name} with custom image: $imageUrl');
@@ -124,6 +120,7 @@ class ShoppingListProvider with ChangeNotifier {
       
       await _databaseRepository.deleteShoppingItem(_groupId, item.id);
       _items.removeWhere((i) => i.id == item.id);
+      notifyListeners();
     } catch (e) {
       _setErrorMessage('Fehler beim Entfernen des Artikels: ${e.toString()}');
     } finally {
@@ -146,6 +143,7 @@ class ShoppingListProvider with ChangeNotifier {
       final index = _items.indexWhere((i) => i.id == item.id);
       if (index != -1) {
         _items[index] = updatedItem;
+        notifyListeners();
       }
     } catch (e) {
       _setErrorMessage(
@@ -178,6 +176,7 @@ class ShoppingListProvider with ChangeNotifier {
             'price': updatedItem.price,
             'imageUrl': updatedItem.imageUrl,
             'hasCustomImage': updatedItem.hasCustomImage,
+            'isBought': updatedItem.isBought,
           });
     } catch (e) {
       _setErrorMessage('Fehler beim Aktualisieren des Artikels: ${e.toString()}');
@@ -210,6 +209,7 @@ class ShoppingListProvider with ChangeNotifier {
         await _databaseRepository.deleteShoppingItem(_groupId, item.id);
       }
       _items.removeWhere((item) => item.isBought);
+      notifyListeners();
     } catch (e) {
       _setErrorMessage(
         'Fehler beim Löschen der gekauften Artikel: ${e.toString()}',

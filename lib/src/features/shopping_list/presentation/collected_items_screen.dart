@@ -125,7 +125,7 @@ class CollectedItems extends StatelessWidget {
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w500,
-                                          color: Colors.green,
+                                          color: Colors.black,
                                         ),
                                       ),
                                       if (item.price != null)
@@ -144,7 +144,7 @@ class CollectedItems extends StatelessWidget {
                                     IconButton(
                                       icon: const Icon(
                                         Icons.edit_outlined,
-                                        color: Colors.blueAccent,
+                                        color: Colors.black,
                                       ),
                                       onPressed: () {
                                         showDialog(
@@ -163,7 +163,7 @@ class CollectedItems extends StatelessWidget {
                                     IconButton(
                                       icon: const Icon(
                                         Icons.delete_outline,
-                                        color: Colors.redAccent,
+                                        color: Colors.black,
                                       ),
                                       onPressed: () {
                                         onRemoveItem(item);
